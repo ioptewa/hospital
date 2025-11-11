@@ -365,14 +365,11 @@ app.get('/checkIfApptExists', (req, res) => {
           return res.status(500).json({ error: "Database error 3" });
         }
 
-        // 注意：原逻辑这里其实反了
-        // results3 有内容说明医生有工作安排（✅ 正常）
-        // results3 为空说明医生休息中（⚠️ 不可预约）
-        if (results3.length) {
-          cond3 = [];
-        } else {
-          cond3 = [1]; // 表示医生不在班
-        }
+      if (results3.length) {
+        cond3 = [1]; // 医生不在班
+      } else {
+        cond3 = []; // 医生在班
+      }
 
         const all = cond1.concat(cond2, cond3);
 
@@ -651,13 +648,15 @@ app.get('/showDiagnoses', (req, res) => {
   });
 });
 
-//To Show all diagnosed appointments till now
+//To Show all diagnosed appointments till now(对于一天历史的查询)
 app.get('/allDiagnoses', (req, res) => {
   let params = req.query;
   let email = params.patientEmail;
-  let statement =`SELECT date,doctor,concerns,symptoms,diagnosis,prescription FROM 
-  Appointment A INNER JOIN (SELECT * from PatientsAttendAppointments NATURAL JOIN Diagnose 
-  WHERE patient=${email}) AS B ON A.id = B.appt;`
+  let statement =`SELECT A.date, D.name AS doctor, B.concerns, B.symptoms, B.diagnosis, B.prescription FROM 
+Appointment A 
+INNER JOIN (SELECT * from PatientsAttendAppointments NATURAL JOIN Diagnose WHERE patient=${email}) AS B 
+ON A.id = B.appt
+INNER JOIN Doctor D ON B.doctor = D.email;`
   console.log(statement);
   con.query(statement, function (error, results, fields) {
     if (error) throw error;
