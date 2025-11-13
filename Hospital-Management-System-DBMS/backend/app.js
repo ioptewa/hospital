@@ -272,6 +272,59 @@ app.post('/resetPasswordDoctor', (req, res) => {
   });
 });
 
+// Resets Patient Email
+app.post('/resetEmailPatient', (req, res) => {
+  let something = req.query;
+  let oldEmail = something.oldEmail;
+  let newEmail = something.newEmail;
+  let password = something.password; // 确认身份
+
+  let statement = `UPDATE Patient 
+                   SET email = "${newEmail}" 
+                   WHERE email = "${oldEmail}" 
+                   AND password = "${password}";`;
+
+  console.log(statement);
+  con.query(statement, function (error, results, fields) {
+    if (error) throw error;
+    else {
+      if (results.affectedRows > 0) {
+        email_in_use = newEmail;
+      }
+      return res.json({
+        data: results
+      })
+    };
+  });
+});
+
+// Resets Doctor Email
+app.post('/resetEmailDoctor', (req, res) => {
+  let something = req.query;
+  let oldEmail = something.oldEmail;
+  let newEmail = something.newEmail;
+  let password = something.password;
+
+  let statement = `UPDATE Doctor
+                   SET email = "${newEmail}" 
+                   WHERE email = "${oldEmail}" 
+                   AND password = "${password}";`;
+
+  console.log(statement);
+  con.query(statement, function (error, results, fields) {
+    if (error) throw error;
+    else {
+      if (results.affectedRows > 0) {
+        email_in_use = newEmail;
+      }
+      return res.json({
+        data: results
+      })
+    };
+  });
+});
+
+
 //Returns Who is Logged in
 app.get('/userInSession', (req, res) => {
   return res.json({ email: `${email_in_use}`, who:`${who}`});
