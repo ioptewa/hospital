@@ -84,3 +84,13 @@ FOREIGN KEY (doctor) REFERENCES Doctor (email) ON DELETE CASCADE,
 FOREIGN KEY (history) REFERENCES MedicalHistory (id) ON DELETE CASCADE,
 PRIMARY KEY (history, doctor)
 );
+
+-- ==========================================
+-- 2025-11-13 更新：新增病人身体数据字段
+-- ==========================================
+USE HMS;
+
+-- 如果你的 Patient 表还没有这些列，请先运行：
+ALTER TABLE Patient ADD COLUMN age INT;
+ALTER TABLE Patient ADD COLUMN height VARCHAR(10);
+ALTER TABLE Patient ADD COLUMN weight VARCHAR(10);
