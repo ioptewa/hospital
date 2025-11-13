@@ -88,6 +88,7 @@ export class PatientsViewAppointments extends Component {
                                     </td> 
                                     <td>
                                     {   patient.status==="NotDone"?
+                                    //1:已就诊，cancel
                                         <Button label="Cancel"
                                         onClick = {() => {
                                             fetch('http://localhost:3001/deleteAppt?uid='+ patient.ID)
@@ -95,12 +96,8 @@ export class PatientsViewAppointments extends Component {
                                         }}
                                         ></Button>
                                         :
-                                        <Button label="Delete"
-                                        onClick = {() => {
-                                            fetch('http://localhost:3001/deleteAppt?uid='+ patient.ID)
-                                            window.location.reload()
-                                        }}
-                                        ></Button>
+                                       //已就诊
+                                      <span style={{color: "gray", padding: "10px"}}>Completed</span>
                                     }
                                     </td>
                                 </tr>

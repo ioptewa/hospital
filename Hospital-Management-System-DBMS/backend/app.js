@@ -686,13 +686,7 @@ app.get('/deleteAppt', (req, res) => {
         });
       }
       else{
-        if(who=="pat"){
-          statement = `DELETE FROM PatientsAttendAppointments p WHERE p.appt = ${uid}`;
-          console.log(statement);
-          con.query(statement, function (error, results, fields) {
-            if (error) throw error;
-          });
-        }
+        console.log("Attempt to delete completed appointment blocked.");
       }
     };
   });
