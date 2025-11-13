@@ -64,6 +64,11 @@ app.get('/makeAccount', (req, res) => {
   let password = query.password;
   let address = query.address;
   let gender = query.gender;
+  //增加身高年龄体重
+  let age = query.age;
+  let height = query.height;
+  let weight = query.weight;
+  //
   let medications = query.medications;
   let conditions = query.conditions;
   let surgeries = query.surgeries;
@@ -76,8 +81,10 @@ app.get('/makeAccount', (req, res) => {
   if(!surgeries===undefined){
     surgeries="none"
   }
-  let sql_statement = `INSERT INTO Patient (email, password, name, address, gender) 
-                       VALUES ` + `("${email}", "${password}", "${name}", "${address}", "${gender}")`;
+// --- 修改 SQL 语句，加入 age, height, weight ---
+  let sql_statement = `INSERT INTO Patient (email, password, name, address, gender, age, height, weight) 
+                       VALUES ("${email}", "${password}", "${name}", "${address}", "${gender}", ${age}, "${height}", "${weight}")`;
+  
   console.log(sql_statement);
   con.query(sql_statement, function (error, results, fields) {
     if (error) throw error;

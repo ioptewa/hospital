@@ -34,6 +34,7 @@ const AppBar = (props) => (
     style={{ zIndex: '1' }}
     {...props} />
 );
+
 export class CreateAccount extends Component {
   constuctor() {
   }
@@ -63,9 +64,19 @@ export class CreateAccount extends Component {
                       window.alert("An account is already associated with that email.");
                       console.log("no user found");
                     } else {
-                      fetch("http://localhost:3001/makeAccount?name=" + value.firstName + "&lastname=" + value.lastName + "&email=" + value.email
-                        + "&password=" + value.password + "&address=" + value.address + "&gender=" + value.gender
-                        + "&conditions=" + value.conditions + "&medications=" + value.medications + "&surgeries=" + value.surgeries);
+                      // --- 修改点：fetch URL 中增加了 age, height, weight ---
+                      fetch("http://localhost:3001/makeAccount?name=" + value.firstName + 
+                            "&lastname=" + value.lastName + 
+                            "&email=" + value.email + 
+                            "&password=" + value.password + 
+                            "&address=" + value.address + 
+                            "&gender=" + value.gender + 
+                            "&age=" + value.age +           // 新增
+                            "&height=" + value.height +     // 新增
+                            "&weight=" + value.weight +     // 新增
+                            "&conditions=" + value.conditions + 
+                            "&medications=" + value.medications + 
+                            "&surgeries=" + value.surgeries);
                       window.location = "/Home";
                     }
                   });
@@ -87,6 +98,29 @@ export class CreateAccount extends Component {
                 name="gender"
                 placeholder="Female or Male"
                 required />
+              
+              {/* --- 新增输入框开始 --- */}
+              <FormField
+                label="Age"
+                name="age"
+                placeholder="e.g. 25"
+                required 
+                validate={{ regexp: /^[0-9]+$/, message: "Numbers only" }}
+              />
+              <FormField
+                label="Height"
+                name="height"
+                placeholder="e.g. 175cm"
+                required 
+              />
+              <FormField
+                label="Weight"
+                name="weight"
+                placeholder="e.g. 70kg"
+                required 
+              />
+              {/* --- 新增输入框结束 --- */}
+
               <FormField
                 label="Medical History - Conditions"
                 name="conditions"
