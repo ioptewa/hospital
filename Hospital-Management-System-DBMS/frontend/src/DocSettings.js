@@ -1,102 +1,174 @@
-import React, { Component} from 'react';
-
+import React, { Component } from 'react';
 import {
-    Box,
-    Button,
-    Heading,
-    Grommet,
-    FormField,
-    Form
+  Box,
+  Button,
+  Heading,
+  Grommet,
+  FormField,
+  Form,
+  Grid,
+  Card,
+  CardBody,
+  CardHeader,
+  Text,
 } from 'grommet';
-
 import './App.css';
 
 const theme = {
-    global: {
-        colors: {
-            brand: '#000000',
-            focus: '#000000'
-        },
-        font: {
-            family: 'Lato',
-        },
+  global: {
+    colors: {
+      brand: '#2B2B2B',
+      focus: '#000000',
+      background: '#F8F9FA',
     },
+    font: {
+      family: 'Lato',
+    },
+  },
 };
 
 const AppBar = (props) => (
-    <Box
-        tag='header'
-        direction='row'
-        align='center'
-        justify='between'
-        background='brand'
-        pad={{ left: 'medium', right: 'small', vertical: 'small' }}
-        style={{ zIndex: '1' }}
-        {...props} />
+  <Box
+    tag='header'
+    direction='row'
+    align='center'
+    justify='between'
+    background='brand'
+    pad={{ left: 'medium', right: 'small', vertical: 'small' }}
+    style={{ zIndex: '1' }}
+    {...props}
+  />
 );
 
 export class DocSettings extends Component {
-    constuctor() {
-    }
-    render() {
-        return (
-            <Grommet theme={theme} full>
-                <Box >
-                    <AppBar>
-                    <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>HMS</Heading></a>
-                    </AppBar>
-                    <Box pad="small">
-                    <Form
-                    onSubmit={({ value }) => {
-                        let email_in_use = "";
-                        console.log(value);
-                        fetch("http://localhost:3001/userInSession")
-                          .then(res => res.json())
-                          .then(res => {
-                            var string_json = JSON.stringify(res);
-                            var email_json = JSON.parse(string_json);
-                            email_in_use = email_json.email;
-                            console.log(email_in_use);
-                          fetch("http://localhost:3001/resetPasswordDoctor?email=" + 
-                          email_in_use + "&oldPassword=" + value.oldPassword + "&newPassword=" + 
-                          value.newPassword, {method: 'POST'})
-                          .then(res => res.json())
-                          .then(res => {
-                            let didUpdate = res.data.affectedRows;
-                            if(didUpdate === 0) {
-                                window.alert("Old Password is wrong");
-                            } else {
-                                window.alert("Password Reset Successful");
-                            }
-                          });
-                          });
+  render() {
+    return (
+      <Grommet theme={theme} full>
+        <Box fill>
+          {/* 顶栏 */}
+          <AppBar>
+            <a
+              style={{ color: 'white', textDecoration: 'none' }}
+              href='/'
+            >
+              <Heading level='3' margin='none' color='white'>
+                HMS
+              </Heading>
+            </a>
+          </AppBar>
 
-                    }}>
-                        <h3>Password Change</h3>
-                        <FormField
-                            type='password'
-                            label="Old Password"
-                            name="oldPassword"
-                            required
-                        />
-                        <br />
-                        <FormField
-                            label="New Password"
-                            name="newPassword"
-                            required
-                        />
-                        <br />
-                        <Button
-                            type="submit"
-                            label="Change Password"
-                            primary
-                        />
-                    </Form>
+          {/* 主体区域 */}
+          <Box pad='large' align='center'>
+            <Heading level='2' margin='small'>
+              Doctor Settings
+            </Heading>
+
+            <Grid
+              columns={['medium', 'medium']}
+              gap='large'
+              pad='medium'
+              responsive
+            >
+              {/* 修改密码卡片 */}
+              <Card elevation='medium' background='white' pad='medium' round='medium'>
+                <CardHeader pad={{ bottom: 'small' }}>
+                  <Text size='large' weight='bold'>Change Password</Text>
+                </CardHeader>
+                <CardBody>
+                  <Form
+                    onSubmit={({ value }) => {
+                      fetch('http://localhost:3001/userInSession')
+                        .then(res => res.json())
+                        .then(res => {
+                          const email_in_use = res.email;
+                          fetch(
+                            `http://localhost:3001/resetPasswordDoctor?email=${email_in_use}&oldPassword=${value.oldPassword}&newPassword=${value.newPassword}`,
+                            { method: 'POST' }
+                          )
+                            .then(res => res.json())
+                            .then(res => {
+                              let didUpdate = res.data.affectedRows;
+                              if (didUpdate === 0) {
+                                window.alert('Incorrect old password.');
+                              } else {
+                                window.alert('Password reset successful!');
+                              }
+                            });
+                        });
+                    }}
+                  >
+                    <FormField
+                      label='Old Password'
+                      name='oldPassword'
+                      type='password'
+                      required
+                    />
+                    <FormField
+                      label='New Password'
+                      name='newPassword'
+                      type='password'
+                      required
+                    />
+                    <Box align='center' pad={{ top: 'medium' }}>
+                      <Button type='submit' label='Change Password' primary />
                     </Box>
-                </Box>
-            </Grommet>
-        );
-    }
+                  </Form>
+                </CardBody>
+              </Card>
+
+              {/* 修改邮箱卡片 */}
+              <Card elevation='medium' background='white' pad='medium' round='medium'>
+                <CardHeader pad={{ bottom: 'small' }}>
+                  <Text size='large' weight='bold'>Change Email</Text>
+                </CardHeader>
+                <CardBody>
+                  <Form
+                    onSubmit={({ value }) => {
+                      fetch('http://localhost:3001/userInSession')
+                        .then(res => res.json())
+                        .then(res => {
+                          const oldEmail = res.email;
+                          // 调用医生邮箱修改接口（需要密码验证）
+                          fetch(
+                            `http://localhost:3001/resetEmailDoctor?oldEmail=${oldEmail}&newEmail=${value.newEmail}&password=${value.password}`,
+                            { method: 'POST' }
+                          )
+                            .then(res => res.json())
+                            .then(res => {
+                              let didUpdate = res.data.affectedRows;
+                              if (didUpdate === 0) {
+                                window.alert('Incorrect password or email already exists.');
+                              } else {
+                                window.alert('Email reset successful!');
+                              }
+                            });
+                        });
+                    }}
+                  >
+                    <FormField
+                      label='Password (for verification)'
+                      name='password'
+                      type='password'
+                      required
+                    />
+                    <FormField
+                      label='New Email'
+                      name='newEmail'
+                      type='email'
+                      required
+                    />
+                    <Box align='center' pad={{ top: 'medium' }}>
+                      <Button type='submit' label='Change Email' primary />
+                    </Box>
+                  </Form>
+                </CardBody>
+              </Card>
+            </Grid>
+          </Box>
+        </Box>
+      </Grommet>
+    );
+  }
 }
 
 export default DocSettings;

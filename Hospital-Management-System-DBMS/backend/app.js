@@ -272,6 +272,37 @@ app.post('/resetPasswordDoctor', (req, res) => {
   });
 });
 
+app.post("/updateDoctorEmail", async (req, res) => {
+  const oldEmail = req.query.oldEmail;
+  const newEmail = req.query.newEmail;
+
+  try {
+    // 检查新邮箱是否被占用
+    const [exists] = await db.promise().query(
+      "SELECT * FROM Doctor WHERE email = ?",
+      [newEmail]
+    );
+    if (exists.length > 0) {
+      return res.json({ success: false, message: "Email already in use." });
+    }
+
+    // 更新邮箱
+    const [result] = await db.promise().query(
+      "UPDATE Doctor SET email = ? WHERE email = ?",
+      [newEmail, oldEmail]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.json({ success: false, message: "Doctor not found." });
+    }
+
+    res.json({ success: true, message: "Email updated successfully." });
+  } catch (err) {
+    console.error("Error updating doctor email:", err);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+});
+
 // Resets Patient Email
 app.post('/resetEmailPatient', (req, res) => {
   let something = req.query;
