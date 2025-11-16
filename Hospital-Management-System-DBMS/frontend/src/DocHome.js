@@ -152,6 +152,7 @@ export class DocHome extends Component {
                                 <Box fill pad={{ vertical: 'small' }}>
                                     <MenuButton label="Appointments" icon={<Calendar />} href="/ApptList" />
                                     <MenuButton label="View Patients" icon={<User />} href="/MedHistView" />
+                                    <MenuButton label="Statistics" icon={<Calendar />} href="/DocStatistics" />
                                     <MenuButton label="Settings" icon={<SettingsOption />} href="/DocSettings" />
                                     <Box border={{ side: 'top', color: 'dark-2' }} margin={{ top: 'small' }}>
                                         <MenuButton label="Log Out" icon={<Logout />} onClick={() => {

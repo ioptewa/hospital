@@ -19,6 +19,7 @@ import DocViewAppt from './DocViewAppt.js';
 import MakeDoc from './MakeDoc.js';
 import Diagnose from './Diagnose.js';
 import ShowDiagnoses from './ShowDiagnoses.js';
+import DocStatistics from "./DocStatistics";
 
 export default function App() {
   let [component, setComponent] = useState(<LogIn />)
@@ -52,6 +53,9 @@ export default function App() {
           </Route>
           <Route path="/MakeDoc">
             <MakeDoc />
+          </Route>
+          <Route path="/DocStatistics">
+            <DocStatistics />
           </Route>
           <Route path="/Settings">
             <Settings />

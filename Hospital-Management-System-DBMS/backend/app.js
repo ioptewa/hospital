@@ -72,32 +72,32 @@ app.get('/makeAccount', (req, res) => {
   let medications = query.medications;
   let conditions = query.conditions;
   let surgeries = query.surgeries;
-  if(medications===undefined){
-    medications="none"
+  if (medications === undefined) {
+    medications = "none"
   }
-  if(conditions===undefined){
-    conditions="none"
+  if (conditions === undefined) {
+    conditions = "none"
   }
-  if(!surgeries===undefined){
-    surgeries="none"
+  if (!surgeries === undefined) {
+    surgeries = "none"
   }
-// --- 修改 SQL 语句，加入 age, height, weight ---
+  // --- 修改 SQL 语句，加入 age, height, weight ---
   let sql_statement = `INSERT INTO Patient (email, password, name, address, gender, age, height, weight) 
                        VALUES ("${email}", "${password}", "${name}", "${address}", "${gender}", ${age}, "${height}", "${weight}")`;
-  
+
   console.log(sql_statement);
   con.query(sql_statement, function (error, results, fields) {
     if (error) throw error;
     else {
       email_in_use = email;
       password_in_use = password;
-      who="pat";
+      who = "pat";
       return res.json({
         data: results
       })
     };
   });
-  sql_statement='SELECT id FROM MedicalHistory ORDER BY id DESC LIMIT 1;';
+  sql_statement = 'SELECT id FROM MedicalHistory ORDER BY id DESC LIMIT 1;';
   console.log(sql_statement)
   con.query(sql_statement, function (error, results, fields) {
     if (error) throw error;
@@ -114,7 +114,7 @@ app.get('/makeAccount', (req, res) => {
           console.log(sql_statement);
           con.query(sql_statement, function (error, results, fields) {
             if (error) throw error;
-            else {};
+            else { };
           });
         };
       });
@@ -155,7 +155,7 @@ app.get('/makeDocAccount', (req, res) => {
       let sql_statement = `INSERT INTO DocsHaveSchedules (sched, doctor) 
                        VALUES ` + `(${schedule}, "${email}")`;
       console.log(sql_statement);
-      con.query(sql_statement, function(error){
+      con.query(sql_statement, function (error) {
         if (error) throw error;
       })
       email_in_use = email;
@@ -165,6 +165,86 @@ app.get('/makeDocAccount', (req, res) => {
         data: results
       })
     };
+  });
+});
+
+// 获取医生统计数据
+app.get('/doctorStatistics', (req, res) => {
+  const doctorEmail = email_in_use; // 当前登录的医生邮箱
+
+  // 查询月度预约统计数据 (已修正：使用 NOT EXISTS 邏輯計算新患者)
+  const monthlyApptQuery = `SELECT 
+DATE_FORMAT(a.date, '%b') as month,
+COUNT(a.id) as count,
+COUNT(DISTINCT 
+  CASE WHEN 
+    NOT EXISTS (
+      SELECT 1
+      FROM PatientsAttendAppointments AS old_psa
+      INNER JOIN Diagnose AS old_d ON old_psa.appt = old_d.appt
+      WHERE 
+        old_psa.patient = psa.patient
+        AND old_d.doctor = d.doctor
+        AND old_psa.appt < a.id
+    ) 
+  THEN psa.patient END
+) as newPatients
+FROM Appointment a
+INNER JOIN PatientsAttendAppointments psa ON a.id = psa.appt
+INNER JOIN Diagnose d ON a.id = d.appt
+WHERE d.doctor = ?
+AND a.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+GROUP BY YEAR(a.date), MONTH(a.date), DATE_FORMAT(a.date, '%b')
+ORDER BY YEAR(a.date), MONTH(a.date)`;
+  // 查询患者性别分布
+  const genderStatsQuery = ` SELECT 
+p.gender,
+COUNT(DISTINCT psa.patient) as value
+FROM Patient p
+INNER JOIN PatientsAttendAppointments psa ON p.email = psa.patient
+ INNER JOIN Diagnose d ON psa.appt = d.appt
+ WHERE d.doctor = ?
+ GROUP BY p.gender
+ `;
+
+  console.log("Fetching statistics for doctor:", doctorEmail);
+
+
+  con.query(monthlyApptQuery, [doctorEmail], function (error, apptResults, fields) {
+    if (error) {
+      console.error("Error fetching appointment stats:", error);
+      // 打印 SQL 错误信息，方便调试
+      console.error("SQL Error Message:", error.sqlMessage);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    // 执行性别分布查询
+    con.query(genderStatsQuery, [doctorEmail], function (error, genderResults, fields) {
+      if (error) {
+        console.error("Error fetching gender stats:", error);
+        return res.status(500).json({ error: "Database error" });
+      }
+
+      console.log("Appointment stats:", apptResults);
+      console.log("Gender stats:", genderResults);
+
+      // 格式化返回数据以匹配前端期望的结构
+      const formattedApptStats = apptResults.map(item => ({
+        month: item.month,
+        count: item.count,
+        newPatients: item.newPatients
+      }));
+
+      const formattedGenderStats = genderResults.map(item => ({
+        gender: item.gender,
+        value: item.value
+      }));
+
+      return res.json({
+        apptStats: formattedApptStats,
+        genderStats: formattedGenderStats
+      });
+    });
   });
 });
 
@@ -219,7 +299,7 @@ app.get('/checkDoclogin', (req, res) => {
         var json = JSON.parse(string);
         email_in_use = json[0].email;
         password_in_use = json[0].password;
-        who="doc";
+        who = "doc";
         console.log(email_in_use);
         console.log(password_in_use);
       }
@@ -358,7 +438,7 @@ app.post('/resetEmailDoctor', (req, res) => {
 
 //Returns Who is Logged in
 app.get('/userInSession', (req, res) => {
-  return res.json({ email: `${email_in_use}`, who:`${who}`});
+  return res.json({ email: `${email_in_use}`, who: `${who}` });
 });
 
 //Logs the person out
@@ -456,11 +536,11 @@ app.get('/checkIfApptExists', (req, res) => {
           return res.status(500).json({ error: "Database error 3" });
         }
 
-      if (results3.length) {
-        cond3 = [1]; // 医生不在班
-      } else {
-        cond3 = []; // 医生在班
-      }
+        if (results3.length) {
+          cond3 = [1]; // 医生不在班
+        } else {
+          cond3 = []; // 医生在班
+        }
 
         const all = cond1.concat(cond2, cond3);
 
@@ -581,18 +661,18 @@ app.get('/patientViewAppt', (req, res) => {
 
 //Checks if history exists
 app.get('/checkIfHistory', (req, res) => {
-    let params = req.query;
-    let email = params.email;
-    let statement = "SELECT patient FROM PatientsFillHistory WHERE patient = " + email;
-    console.log(statement)
-    con.query(statement, function (error, results, fields) {
-        if (error) throw error;
-        else {
-            return res.json({
-                data: results
-            })
-        };
-    });
+  let params = req.query;
+  let email = params.email;
+  let statement = "SELECT patient FROM PatientsFillHistory WHERE patient = " + email;
+  console.log(statement)
+  con.query(statement, function (error, results, fields) {
+    if (error) throw error;
+    else {
+      return res.json({
+        data: results
+      })
+    };
+  });
 });
 
 //Adds to PatientsAttendAppointment Table
@@ -607,7 +687,7 @@ app.get('/addToPatientSeeAppt', (req, res) => {
   console.log(sql_try);
   con.query(sql_try, function (error, results, fields) {
     if (error) throw error;
-    else{
+    else {
       return res.json({
         data: results
       })
@@ -626,12 +706,12 @@ app.get('/schedule', (req, res) => {
   let concerns = params.concerns;
   let symptoms = params.symptoms;
   let doctor = params.doc;
-    const dateObj = new Date(date);
+  const dateObj = new Date(date);
   const day = String(dateObj.getDate()).padStart(2, '0');
   const month = String(dateObj.getMonth() + 1).padStart(2, '0');
   const year = dateObj.getFullYear();
   const ndate = `${day}/${month}/${year}`; // 最终格式：dd/mm/yyyy
-  
+
   let sql_date = `STR_TO_DATE('${ndate}', '%d/%m/%Y')`;
   //sql to turn string to sql time obj
   let sql_start = `CONVERT('${time}', TIME)`;
@@ -648,7 +728,7 @@ app.get('/schedule', (req, res) => {
       console.log(sql_try);
       con.query(sql_try, function (error, results, fields) {
         if (error) throw error;
-        else{
+        else {
           return res.json({
             data: results
           })
@@ -683,7 +763,7 @@ app.get('/diagnose', (req, res) => {
     else {
       let statement = `UPDATE Appointment SET status="Done" WHERE id=${id};`;
       console.log(statement)
-      con.query(statement, function (error, results, fields){
+      con.query(statement, function (error, results, fields) {
         if (error) throw error;
       })
     };
@@ -743,7 +823,7 @@ app.get('/showDiagnoses', (req, res) => {
 app.get('/allDiagnoses', (req, res) => {
   let params = req.query;
   let email = params.patientEmail;
-  let statement =`SELECT A.date, D.name AS doctor, B.concerns, B.symptoms, B.diagnosis, B.prescription FROM 
+  let statement = `SELECT A.date, D.name AS doctor, B.concerns, B.symptoms, B.diagnosis, B.prescription FROM 
 Appointment A 
 INNER JOIN (SELECT * from PatientsAttendAppointments NATURAL JOIN Diagnose WHERE patient=${email}) AS B 
 ON A.id = B.appt
@@ -769,14 +849,14 @@ app.get('/deleteAppt', (req, res) => {
     if (error) throw error;
     else {
       results = results[0].status
-      if(results == "NotDone"){
+      if (results == "NotDone") {
         statement = `DELETE FROM Appointment WHERE id=${uid};`;
         console.log(statement);
         con.query(statement, function (error, results, fields) {
           if (error) throw error;
         });
       }
-      else{
+      else {
         console.log("Attempt to delete completed appointment blocked.");
       }
     };
