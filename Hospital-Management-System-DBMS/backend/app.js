@@ -765,6 +765,7 @@ app.get('/diagnose', (req, res) => {
       console.log(statement)
       con.query(statement, function (error, results, fields) {
         if (error) throw error;
+        res.send({ success: true });
       })
     };
   });
