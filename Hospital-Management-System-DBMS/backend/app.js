@@ -172,51 +172,63 @@ app.get('/makeDocAccount', (req, res) => {
 app.get('/doctorStatistics', (req, res) => {
   const doctorEmail = email_in_use; // 当前登录的医生邮箱
 
-  // 查询月度预约统计数据 (已修正：使用 NOT EXISTS 邏輯計算新患者)
+  console.log("=== DEBUG: Statistics Request ===");
+  console.log("Current doctor email:", doctorEmail);
+  console.log("Current session - email_in_use:", email_in_use);
+  console.log("Current session - who:", who);
+
+  if (!doctorEmail) {
+    console.log("ERROR: No doctor logged in");
+    return res.status(401).json({ 
+      error: "No doctor logged in",
+      details: "Please login as a doctor first"
+    });
+  }
+
+  // 查询月度预约统计数据
   const monthlyApptQuery = `SELECT 
-DATE_FORMAT(a.date, '%b') as month,
-COUNT(a.id) as count,
-COUNT(DISTINCT 
-  CASE WHEN 
-    NOT EXISTS (
-      SELECT 1
-      FROM PatientsAttendAppointments AS old_psa
-      INNER JOIN Diagnose AS old_d ON old_psa.appt = old_d.appt
-      WHERE 
-        old_psa.patient = psa.patient
-        AND old_d.doctor = d.doctor
-        AND old_psa.appt < a.id
-    ) 
-  THEN psa.patient END
-) as newPatients
-FROM Appointment a
-INNER JOIN PatientsAttendAppointments psa ON a.id = psa.appt
-INNER JOIN Diagnose d ON a.id = d.appt
-WHERE d.doctor = ?
-AND a.date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-GROUP BY YEAR(a.date), MONTH(a.date), DATE_FORMAT(a.date, '%b')
-ORDER BY YEAR(a.date), MONTH(a.date)`;
+  DATE_FORMAT(a.date, '%b') as month,
+  COUNT(a.id) as count,
+  COUNT(DISTINCT 
+    CASE WHEN 
+      NOT EXISTS (
+        SELECT 1
+        FROM PatientsAttendAppointments AS old_psa
+        INNER JOIN Diagnose AS old_d ON old_psa.appt = old_d.appt
+        WHERE 
+          old_psa.patient = psa.patient
+          AND old_d.doctor = d.doctor
+          AND old_psa.appt < a.id
+      ) 
+    THEN psa.patient END
+  ) as newPatients
+  FROM Appointment a
+  INNER JOIN PatientsAttendAppointments psa ON a.id = psa.appt
+  INNER JOIN Diagnose d ON a.id = d.appt
+  WHERE d.doctor = ?
+  AND a.date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+  GROUP BY YEAR(a.date), MONTH(a.date), DATE_FORMAT(a.date, '%b')
+  ORDER BY YEAR(a.date), MONTH(a.date)`;
+
   // 查询患者性别分布
-  const genderStatsQuery = ` SELECT 
-p.gender,
-COUNT(DISTINCT psa.patient) as value
-FROM Patient p
-INNER JOIN PatientsAttendAppointments psa ON p.email = psa.patient
- INNER JOIN Diagnose d ON psa.appt = d.appt
- WHERE d.doctor = ?
- GROUP BY p.gender
- `;
+  const genderStatsQuery = `SELECT 
+  p.gender,
+  COUNT(DISTINCT psa.patient) as value
+  FROM Patient p
+  INNER JOIN PatientsAttendAppointments psa ON p.email = psa.patient
+  INNER JOIN Diagnose d ON psa.appt = d.appt
+  WHERE d.doctor = ?
+  GROUP BY p.gender`;
 
-  console.log("Fetching statistics for doctor:", doctorEmail);
-
+  console.log("Executing queries for doctor:", doctorEmail);
 
   con.query(monthlyApptQuery, [doctorEmail], function (error, apptResults, fields) {
     if (error) {
       console.error("Error fetching appointment stats:", error);
-      // 打印 SQL 错误信息，方便调试
-      console.error("SQL Error Message:", error.sqlMessage);
       return res.status(500).json({ error: "Database error" });
     }
+
+    console.log("Appointment results:", apptResults);
 
     // 执行性别分布查询
     con.query(genderStatsQuery, [doctorEmail], function (error, genderResults, fields) {
@@ -225,8 +237,7 @@ INNER JOIN PatientsAttendAppointments psa ON p.email = psa.patient
         return res.status(500).json({ error: "Database error" });
       }
 
-      console.log("Appointment stats:", apptResults);
-      console.log("Gender stats:", genderResults);
+      console.log("Gender results:", genderResults);
 
       // 格式化返回数据以匹配前端期望的结构
       const formattedApptStats = apptResults.map(item => ({
@@ -239,6 +250,11 @@ INNER JOIN PatientsAttendAppointments psa ON p.email = psa.patient
         gender: item.gender,
         value: item.value
       }));
+
+      console.log("Final response data:", {
+        apptStats: formattedApptStats,
+        genderStats: formattedGenderStats
+      });
 
       return res.json({
         apptStats: formattedApptStats,

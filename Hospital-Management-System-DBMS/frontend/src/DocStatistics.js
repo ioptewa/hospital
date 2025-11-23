@@ -90,72 +90,115 @@ const BarChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) 
     </Box>
   );
 };
-
-const LineChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) => {
-  if (!data || data.length === 0) {
-    return <EmptyState message="No data available for line chart" />;
-  }
+const LineChart = ({ data, labels, height = 300 }) => {
+  if (!data || data.length === 0)
+    return <Box align="center" justify="center" pad="large"><Text color="dark-4">No data available for line chart</Text></Box>;
 
   const maxValue = Math.max(...data);
-  const points = data.map((value, index) => 
-    `${(index / (data.length - 1)) * 100},${100 - (value / maxValue) * 90}`
-  ).join(" ");
+  // 计算每个数据点的坐标（x基于索引，y基于数值占比）
+  const points = data.map((v, i) => ({
+    x: (i / (data.length - 1)) * 100,
+    y: 100 - (v / maxValue) * 85 // 85%是可视区域占比，避免顶到边界
+  }));
+
+  // 生成平滑贝塞尔曲线的路径（替代原折线，提升视觉流畅度）
+  const generateBezierPath = () => {
+    const pathSegments = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      // 计算控制点（实现曲线平滑过渡）
+      const c1 = {
+        x: p0.x + (p1.x - p0.x) / 3,
+        y: p0.y
+      };
+      const c2 = {
+        x: p1.x - (p1.x - p0.x) / 3,
+        y: p1.y
+      };
+      pathSegments.push(`C ${c1.x},${c1.y} ${c2.x},${c2.y} ${p1.x},${p1.y}`);
+    }
+    return `M ${points[0].x},${points[0].y} ${pathSegments.join(" ")}`;
+  };
+
+  const pathData = generateBezierPath();
 
   return (
-    <Box height={`${height}px`} justify="center">
+    <Box height={`${height}px`} pad={{ top: "medium", horizontal: "small" }}>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
-        {/* 网格线 */}
+        {/* 网格线（保持可读性，减少视觉干扰） */}
         {[0, 25, 50, 75, 100].map((y) => (
-          <line
-            key={y}
-            x1="0"
-            y1={y}
-            x2="100"
-            y2={y}
-            stroke={CHART_COLORS.grid}
-            strokeWidth="0.5"
+          <line 
+            key={y} 
+            x1="0" y1={y} x2="100" y2={y}
+            stroke="#e5e7eb" strokeWidth="0.8" strokeDasharray="2,2"
           />
         ))}
-        
-        {/* 数据线 */}
-        <polyline
-          points={points}
-          fill="none"
-          stroke={color}
-          strokeWidth="2.5"
-          strokeLinejoin="round"
-          strokeLinecap="round"
+
+        {/* 渐变与阴影定义（提升视觉层次） */}
+        <defs>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          <linearGradient id="lineGradient" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+        </defs>
+
+        {/* 填充区域（增加趋势层次感） */}
+        <path
+          d={pathData}
+          fill="url(#lineGradient)"
+          stroke="none"
+          opacity="0.15"
+          filter="url(#glow)"
         />
-        
-        {/* 数据点 */}
-        {data.map((value, index) => {
-          const x = (index / (data.length - 1)) * 100;
-          const y = 100 - (value / maxValue) * 90;
-          return (
-            <circle
-              key={index}
-              cx={x}
-              cy={y}
-              r="3"
-              fill={color}
-              stroke={CHART_COLORS.background}
-              strokeWidth="2"
-            />
-          );
-        })}
-      </svg>
-      
-      {/* X轴标签 */}
-      <Box direction="row" justify="between" margin={{ top: "small" }}>
-        {labels.map((label, index) => (
-          <Text 
-            key={index} 
-            size="small" 
-            style={{ 
-              transform: 'rotate(-45deg)',
-              transformOrigin: 'center'
+
+        {/* 折线（主视觉） */}
+        <path
+          d={pathData}
+          fill="none"
+          stroke="url(#lineGradient)"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* 数据点（增强交互感） */}
+        {points.map((point, index) => (
+          <circle
+            key={index}
+            cx={point.x}
+            cy={point.y}
+            r="3"
+            fill="#ffffff"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            style={{ transition: "all 0.2s ease" }}
+            onMouseOver={(e) => {
+              e.currentTarget.setAttribute("r", "4.5");
+              e.currentTarget.setAttribute("stroke-width", "3");
             }}
+            onMouseOut={(e) => {
+              e.currentTarget.setAttribute("r", "3");
+              e.currentTarget.setAttribute("stroke-width", "2");
+            }}
+          />
+        ))}
+      </svg>
+
+      {/* X轴标签（优化排版与可读性） */}
+      <Box direction="row" justify="between" margin={{ top: "small" }}>
+        {labels.map((label, i) => (
+          <Text 
+            key={i} 
+            size="small" 
+            color={CHART_COLORS.text} 
+            weight={500}
             textAlign="center"
+            width="100%"
           >
             {label}
           </Text>
