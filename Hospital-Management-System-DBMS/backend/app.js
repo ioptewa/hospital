@@ -13,7 +13,8 @@ var con = mysql.createConnection({
   user: 'root',
   password: '123456',
   database: 'HMS',
-  multipleStatements: true
+  multipleStatements: true,
+  charset: 'utf8mb4' // --- 添加字符集支持中文 ---
 });
 
 //Connecting To Database
@@ -59,7 +60,8 @@ app.get('/checkIfPatientExists', (req, res) => {
 //Creates User Account
 app.get('/makeAccount', (req, res) => {
   let query = req.query;
-  let name = query.name + " " + query.lastname;
+  // --- 修改点：病人使用中文姓名格式（姓+名），去掉空格 ---
+  let name = query.lastname + query.name;
   let email = query.email;
   let password = query.password;
   let address = query.address;
@@ -73,13 +75,13 @@ app.get('/makeAccount', (req, res) => {
   let conditions = query.conditions;
   let surgeries = query.surgeries;
   if (medications === undefined) {
-    medications = "none"
+    medications = "无"
   }
   if (conditions === undefined) {
-    conditions = "none"
+    conditions = "无"
   }
   if (!surgeries === undefined) {
-    surgeries = "none"
+    surgeries = "无"
   }
   // --- 修改 SQL 语句，加入 age, height, weight ---
   let sql_statement = `INSERT INTO Patient (email, password, name, address, gender, age, height, weight) 
@@ -299,8 +301,7 @@ app.get('/checkDoclogin', (req, res) => {
   let params = req.query;
   let email = params.email;
   let password = params.password;
-  let sql_statement = `SELECT * 
-                       FROM Doctor
+  let sql_statement = `SELECT * FROM Doctor
                        WHERE email="${email}" AND password="${password}"`;
   console.log(sql_statement);
   con.query(sql_statement, function (error, results, fields) {
@@ -466,6 +467,74 @@ app.get('/endSession', (req, res) => {
 
 //Appointment Related
 
+// --------------------------------------------------------
+// --- [修改版] 获取医生排班接口 (位置已修正) ---
+// --------------------------------------------------------
+app.get('/getDocScheduleOnDate', (req, res) => {
+  const params = req.query;
+  const docEmail = params.email;
+  const dateStr = params.date; // 格式 YYYY-MM-DD
+
+  console.log(`[Schedule] Checking for ${docEmail} on ${dateStr}`);
+
+  // 1. 先查询当天已有的预约 (用于置灰)
+  const apptQuery = `
+    SELECT a.starttime 
+    FROM Appointment a
+    JOIN Diagnose d ON a.id = d.appt
+    WHERE d.doctor = "${docEmail}"
+    AND a.date = '${dateStr}'
+    AND a.status = 'NotDone'
+  `;
+
+  con.query(apptQuery, (err, apptRes) => {
+    if (err) {
+      console.error("Error fetching appointments:", err);
+      // 如果查询预约出错，仍然返回一个空列表，不阻断流程
+      apptRes = []; 
+    }
+
+    // 提取忙碌时间段 ["09:00:00", "10:00:00"]
+    const busySlots = apptRes ? apptRes.map(item => item.starttime) : [];
+
+    // 2. 查询排班表 (Schedule)
+    const sql_date_check = `DAYNAME('${dateStr}')`;
+    const scheduleQuery = `
+      SELECT s.starttime, s.endtime, s.breaktime 
+      FROM DocsHaveSchedules dhs
+      JOIN Schedule s ON dhs.sched = s.id
+      WHERE dhs.doctor = "${docEmail}" 
+      AND s.day = ${sql_date_check}
+    `;
+
+    con.query(scheduleQuery, (err, scheduleRes) => {
+      // 定义默认时间 (保底策略)
+      let finalSchedule = {
+        working: true,
+        start: "09:00:00", // 默认早上9点
+        end: "17:00:00",   // 默认下午5点
+        break: "12:00:00", // 默认中午12点休息
+        busy: busySlots
+      };
+
+      if (err) {
+        console.log("Error checking schedule, using default 9-17.");
+      } else if (scheduleRes.length > 0) {
+        // 如果数据库里真有排班，就用数据库的
+        console.log("Found DB schedule for today.");
+        finalSchedule.start = scheduleRes[0].starttime;
+        finalSchedule.end = scheduleRes[0].endtime;
+        finalSchedule.break = scheduleRes[0].breaktime;
+      } else {
+        console.log("No schedule found in DB, using default 9-17.");
+      }
+
+      // 返回结果
+      return res.json(finalSchedule);
+    });
+  });
+});
+
 //Checks If a similar appointment exists to avoid a clash
 app.get('/checkIfApptExists', (req, res) => {
   const params = req.query;
@@ -595,7 +664,7 @@ app.get('/getDateTimeOfAppt', (req, res) => {
 //to get all doctor names
 app.get('/docInfo', (req, res) => {
   let statement = 'SELECT * FROM Doctor';
-  console.log(statement);
+  // console.log(statement); // 注释掉，避免刷屏
   con.query(statement, function (error, results, fields) {
     if (error) throw error;
     else {
