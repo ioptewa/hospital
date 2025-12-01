@@ -50,7 +50,7 @@ export class ShowDiagnoses extends Component {
                 align='center'
                 flex={false}
             >
-                <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>HMS</Heading></a>
+                <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>医院管理系统</Heading></a>
             </Box>
         );
         const Body = () => (
@@ -61,7 +61,7 @@ export class ShowDiagnoses extends Component {
                             <TableBody>
                                 <TableRow>
                                     <TableCell scope="row">
-                                        <strong>Appointment Id</strong>
+                                        <strong>预约编号</strong>
                                     </TableCell>
                                     <TableCell>{diagnosis.appt}</TableCell>
                                     <TableCell></TableCell>
@@ -69,7 +69,7 @@ export class ShowDiagnoses extends Component {
                                 <br />
                                 <TableRow>
                                     <TableCell scope="row">
-                                        <strong>Doctor</strong>
+                                        <strong>医生</strong>
                                     </TableCell>
                                     <TableCell>{diagnosis.doctor}</TableCell>
                                     <TableCell></TableCell>
@@ -77,7 +77,7 @@ export class ShowDiagnoses extends Component {
                                 <br />
                                 <TableRow>
                                     <TableCell scope="row">
-                                        <strong>Diagnosis</strong>
+                                        <strong>诊断结果</strong>
                                     </TableCell>
                                     <TableCell>{diagnosis.diagnosis}</TableCell>
                                     <TableCell></TableCell>
@@ -85,7 +85,7 @@ export class ShowDiagnoses extends Component {
                                 <br />
                                 <TableRow>
                                     <TableCell scope="row">
-                                        <strong>Prescription</strong>
+                                        <strong>处方</strong>
                                     </TableCell>
                                     <TableCell>{diagnosis.prescription}</TableCell>
                                     <TableCell></TableCell>

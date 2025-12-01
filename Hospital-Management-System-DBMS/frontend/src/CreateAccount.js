@@ -6,7 +6,8 @@ import {
   Grommet,
   FormField,
   Form,
-  Text
+  Text,
+  Select // --- 修改点1：引入 Select 组件 ---
 } from 'grommet';
 
 import './App.css';
@@ -44,11 +45,11 @@ export class CreateAccount extends Component {
     return (
       <Grommet theme={theme} full>
         <AppBar>
-          <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>HMS</Heading></a>
+          <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>医院管理系统</Heading></a>
         </AppBar>
         <Box fill align="center" justify="top">
           <Box width="medium">
-          <Text color = "#AAAAAA">Patient's registration form:</Text>
+          <Text color = "#AAAAAA">病人注册表单：</Text>
             <Form
               onReset={event => console.log(event)}
               method="post"
@@ -61,19 +62,18 @@ export class CreateAccount extends Component {
                     console.log(res.data[0]);
 
                     if ((res.data[0])) {
-                      window.alert("An account is already associated with that email.");
+                      window.alert("该邮箱已关联现有账户。");
                       console.log("no user found");
                     } else {
-                      // --- 修改点：fetch URL 中增加了 age, height, weight ---
                       fetch("http://localhost:3001/makeAccount?name=" + value.firstName + 
                             "&lastname=" + value.lastName + 
                             "&email=" + value.email + 
                             "&password=" + value.password + 
                             "&address=" + value.address + 
                             "&gender=" + value.gender + 
-                            "&age=" + value.age +           // 新增
-                            "&height=" + value.height +     // 新增
-                            "&weight=" + value.weight +     // 新增
+                            "&age=" + value.age + 
+                            "&height=" + value.height + 
+                            "&weight=" + value.weight + 
                             "&conditions=" + value.conditions + 
                             "&medications=" + value.medications + 
                             "&surgeries=" + value.surgeries);
@@ -82,95 +82,98 @@ export class CreateAccount extends Component {
                   });
               }}>
               <FormField
-                label="First Name"
+                label="名 (First Name)"
                 name="firstName"
-                placeholder="First name"
+                placeholder="请输入名"
                 required
-                validate={{ regexp: /^[a-z]/i }} />
+                validate={{ regexp: /^[\u4e00-\u9fa5a-zA-Z]+$/, message: "请输入中文或英文字符" }} />
               <FormField
-                label="Last Name"
+                label="姓 (Last Name)"
                 name="lastName"
                 required
-                placeholder="Last Name"
-                validate={{ regexp: /^[a-z]/i }} />
-              <FormField
-                label="Gender"
-                name="gender"
-                placeholder="Female or Male"
-                required />
+                placeholder="请输入姓"
+                validate={{ regexp: /^[\u4e00-\u9fa5a-zA-Z]+$/, message: "请输入中文或英文字符" }} />
               
-              {/* --- 新增输入框开始 --- */}
-              <FormField
-                label="Age"
-                name="age"
-                placeholder="e.g. 25"
-                required 
-                validate={{ regexp: /^[0-9]+$/, message: "Numbers only" }}
-              />
-              <FormField
-                label="Height"
-                name="height"
-                placeholder="e.g. 175cm"
-                required 
-              />
-              <FormField
-                label="Weight"
-                name="weight"
-                placeholder="e.g. 70kg"
-                required 
-              />
-              {/* --- 新增输入框结束 --- */}
+              {/* --- 修改点2：将性别改为下拉选择框 --- */}
+              <FormField label="性别" name="gender" required>
+                <Select
+                  options={['男', '女']}
+                  name="gender"
+                  placeholder="请选择性别"
+                />
+              </FormField>
+              {/* --- 修改结束 --- */}
 
               <FormField
-                label="Medical History - Conditions"
+                label="年龄"
+                name="age"
+                placeholder="例如：25"
+                required 
+                validate={{ regexp: /^[0-9]+$/, message: "仅限数字" }}
+              />
+              <FormField
+                label="身高"
+                name="height"
+                placeholder="例如：175cm"
+                required 
+              />
+              <FormField
+                label="体重"
+                name="weight"
+                placeholder="例如：70kg"
+                required 
+              />
+              
+              <FormField
+                label="病史 - 既往症"
                 name="conditions"
-                placeholder="Conditions"
+                placeholder="无"
                />
               <FormField
-                label="Medical History - Surgeries"
+                label="病史 - 手术史"
                 name="surgeries"
-                placeholder="Surgeries"
+                placeholder="无"
                />
               <FormField
-                label="Medical History - Medications"
+                label="病史 - 药物使用"
                 name="medications"
-                placeholder="Medications"
+                placeholder="无"
                />
               <FormField
-                label="Address"
+                label="家庭住址"
                 name="address"
-                placeholder="Address"
+                placeholder="请输入地址"
                 required />
               <FormField
-                label="Email"
+                label="电子邮箱"
                 name="email"
                 type="email"
-                placeholder="Email"
+                placeholder="请输入邮箱"
                 required />
               <FormField
-                label="Password"
+                label="密码"
                 name="password"
-                placeholder="Password"
+                placeholder="请输入密码"
                 required
-                validate={{ regexp: /^(?=.{8,})(?=.*[0-9]{2})/, message: "@ least 8 characters containing 2 digits" }} />
+                validate={{ regexp: /^(?=.{8,})(?=.*[0-9]{2})/, message: "至少8位字符且包含2个数字" }} />
               <Box direction="row" align="center" >
                 <Button
                   style={{ textAlign: 'center' }}
-                  label="Cancel"
+                  label="取消"
                   fill="horizontal"
                   href="/" />
                 <Button
-                  label="Sign Up"
+                  label="注册"
                   fill="horizontal"
                   type="submit"
                   primary />
               </Box>
               <Box
                 align="center" pad="small">
-                <Text>Are you a doctor?</Text>
+                <Text>您是医生吗？</Text>
                 <Button
                   primary
-                  label="I'm a doctor"
+                  label="我是医生"
                   href="/MakeDoc" />
               </Box>
             </Form>

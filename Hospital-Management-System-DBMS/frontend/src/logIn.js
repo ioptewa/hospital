@@ -55,7 +55,7 @@ class LogIn extends Component {
     return (
       <Grommet theme={theme} full>
         <AppBar>
-        <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>HMS</Heading></a>
+        <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>医院管理系统</Heading></a>
         </AppBar>
 
         <Box
@@ -77,7 +77,7 @@ class LogIn extends Component {
                     .then(res => res.json())
                     .then(res => {
                       if (res.data.length === 0) {
-                        window.alert("Invalid Log In");
+                        window.alert("登录信息有误");
                       } else {
                         window.location = "DocHome";
                         console.log(res.data);
@@ -89,7 +89,7 @@ class LogIn extends Component {
                     .then(res => res.json())
                     .then(res => {
                       if (res.data.length === 0) {
-                        window.alert("Invalid Log In");
+                        window.alert("登录信息有误");
                       } else {
                         window.location = "/Home";
                         console.log(res.data);
@@ -100,23 +100,23 @@ class LogIn extends Component {
               }>
               <FormField
                 color="#00739D"
-                label="Email"
+                label="电子邮箱"
                 name="email"
                 type="email"
-                placeholder = "Please enter your email."
+                placeholder = "请输入您的电子邮箱"
                 required />
               <FormField
                 color="#00739D"
                 type='password'
-                label="Password"
+                label="密码"
                 name="password"
-                placeholder = "Please enter your password."
+                placeholder = "请输入您的密码"
                 required />
               <FormField
                 component={CheckBox}
                 checked={isDoctor}
                 margin="large"
-                label="I'm a doctor"
+                label="我是医生"
                 name="isDoc"
                 onChange={(event) => {
                   this.setState({ isDoctor: event.target.checked })
@@ -124,8 +124,8 @@ class LogIn extends Component {
               />
               <Box direction="column" align="center" >
                 <Button style={{ textAlign: 'center' , margin:'1rem'}}
-                 type="submit" label="Log In" fill="horizontal" primary />
-                <Button label="Create Account"
+                 type="submit" label="登录" fill="horizontal" primary />
+                <Button label="注册新账户"
                   style={{ textAlign: 'center' , margin:'0.5rem'}}
                   fill="horizontal"
                   href="/createAcc" />

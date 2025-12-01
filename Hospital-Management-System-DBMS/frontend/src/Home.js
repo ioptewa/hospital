@@ -63,8 +63,8 @@ export class Home extends Component {
     
     state = { 
         patientInfo: {
-            name: "Loading...",
-            email: "Loading...",
+            name: "加载中...",
+            email: "加载中...",
             gender: "",
             address: "",
             age: "",      
@@ -90,13 +90,13 @@ export class Home extends Component {
                         } else {
                             this.setState({ 
                                 patientInfo: { 
-                                    name: "User Not Found", 
+                                    name: "未找到用户", 
                                     email: email_in_use,
-                                    gender: "Unknown", 
-                                    address: "Unknown",
-                                    age: "Unknown",
-                                    height: "Unknown",
-                                    weight: "Unknown"
+                                    gender: "未知", 
+                                    address: "未知",
+                                    age: "未知",
+                                    height: "未知",
+                                    weight: "未知"
                                 } 
                             });
                         }
@@ -136,11 +136,11 @@ export class Home extends Component {
             );
         }
 
-        // 定义一个显示信息的组件，方便复用，带下划线
+        // --- InfoRow 组件：标签不换行，数值右对齐 ---
         const InfoRow = ({ label, value }) => (
             <Box direction="row" justify="between" border={{ side: 'bottom', color: 'light-3' }} pad={{ vertical: 'small' }}>
-                <Text weight="bold" color="dark-3">{label}:</Text>
-                <Text color="dark-2">{value}</Text>
+                <Text weight="bold" color="dark-3" style={{ whiteSpace: 'nowrap', marginRight: '10px' }}>{label}:</Text>
+                <Text color="dark-2" style={{ textAlign: 'right', wordBreak: 'break-all' }}>{value}</Text>
             </Box>
         );
 
@@ -149,21 +149,33 @@ export class Home extends Component {
                 <Box fill>
                     <AppBar>
                         <Button plain onClick={() => this.setState({ showSidebar: !showSidebar })}>
-                            <Heading level='3' margin='none'>HMS</Heading>
+                            <Heading level='3' margin='none'>医院管理系统</Heading>
                         </Button>
-                        <Heading level='4' margin='none'>Patient Dashboard</Heading>
+                        <Heading level='4' margin='none'>病人工作台</Heading>
                     </AppBar>
 
                     <Box direction='row' flex overflow={{ horizontal: 'hidden' }}>
                         <Collapsible direction="horizontal" open={showSidebar}>
                             <Box flex width='medium' background='brand' elevation='small' align='start' justify='start'>
                                 <Box fill pad={{ vertical: 'small' }}>
-                                    <MenuButton label="Medical History" icon={<History />} href="/MedHistView" />
-                                    <MenuButton label="Schedule Appointment" icon={<ScheduleNew />} href="/scheduleAppt" />
-                                    <MenuButton label="Appointment Records" icon={<Clipboard />} href="/PatientsViewAppt" />
-                                    <MenuButton label="Settings" icon={<SettingsOption />} href="/Settings" />
+                                    <MenuButton 
+                                       label="查看病史" 
+                                       icon={<History />} 
+                                       onClick={() => {
+                                       // 使用当前 state 中获取到的病人 email 进行跳转
+                                       const email = this.state.patientInfo.email;
+                                       if (email && email !== "Loading..." && email !== "未找到用户") {
+                                       window.location.href = "/ViewOneHistory/" + email;
+                                       } else {
+                                        window.alert("正在加载用户信息，请稍后再试...");
+                                       }
+                                     }}
+/>
+                                    <MenuButton label="预约挂号" icon={<ScheduleNew />} href="/scheduleAppt" />
+                                    <MenuButton label="预约记录" icon={<Clipboard />} href="/PatientsViewAppt" />
+                                    <MenuButton label="设置" icon={<SettingsOption />} href="/Settings" />
                                     <Box border={{ side: 'top', color: 'dark-2' }} margin={{ top: 'small' }}>
-                                        <MenuButton label="Log Out" icon={<Logout />} onClick={() => {
+                                        <MenuButton label="退出登录" icon={<Logout />} onClick={() => {
                                                 fetch('http://localhost:3001/endSession');
                                                 window.location.href = "/";
                                             }}
@@ -176,31 +188,31 @@ export class Home extends Component {
                         {/* 内容区域 */}
                         <Box flex align="center" justify="center" background="light-1" pad="medium">
                             <Card width="large" background="white" elevation="medium" round="small" pad="medium">
-                                <CardBody direction="row-responsive" gap="medium" pad="medium">
+                                {/* 修改点：gap 改为 small 以缩短距离 */}
+                                <CardBody direction="row-responsive" gap="small" pad="medium">
                                     
-                                    {/* --- 左侧列：头像 + 名字 --- */}
-                                    <Box width="medium" align="center" justify="start" pad={{ right: "medium" }}>
+                                    {/* --- 左侧列：宽度改为 small (之前是 medium)，缩短与右侧的距离 --- */}
+                                    <Box width="small" align="center" justify="start" pad={{ right: "small" }}>
                                         {avatarContent}
                                         <Heading level="2" margin="none" textAlign="center">
                                             {patientInfo.name}
                                         </Heading>
-                                        {/* 可以在名字下面加个小标签 */}
-                                        <Text size="small" color="gray" margin={{top: "xsmall"}}>Patient Profile</Text>
+                                        <Text size="small" color="gray" margin={{top: "xsmall"}}>病人档案</Text>
                                     </Box>
 
                                     {/* --- 右侧列：详细信息列表 --- */}
                                     <Box flex justify="center" gap="none">
-                                        <InfoRow label="Email" value={patientInfo.email} />
-                                        <InfoRow label="Gender" value={patientInfo.gender || "Unknown"} />
-                                        <InfoRow label="Age" value={patientInfo.age ? patientInfo.age : "Unknown"} />
-                                        <InfoRow label="Height" value={patientInfo.height ? patientInfo.height : "Unknown"} />
-                                        <InfoRow label="Weight" value={patientInfo.weight ? patientInfo.weight : "Unknown"} />
-                                        <InfoRow label="Address" value={patientInfo.address || "Unknown"} />
+                                        <InfoRow label="电子邮箱" value={patientInfo.email} />
+                                        <InfoRow label="性别" value={patientInfo.gender || "未知"} />
+                                        <InfoRow label="年龄" value={patientInfo.age ? patientInfo.age : "未知"} />
+                                        <InfoRow label="身高" value={patientInfo.height ? patientInfo.height : "未知"} />
+                                        <InfoRow label="体重" value={patientInfo.weight ? patientInfo.weight : "未知"} />
+                                        <InfoRow label="地址" value={patientInfo.address || "未知"} />
                                     </Box>
 
                                 </CardBody>
                                 <CardFooter background="light-2" pad="medium" justify="end">
-                                    <Button label="Check Appointments" primary href="/PatientsViewAppt" />
+                                    <Button label="查看预约" primary href="/PatientsViewAppt" />
                                 </CardFooter>
                             </Card>
                         </Box>

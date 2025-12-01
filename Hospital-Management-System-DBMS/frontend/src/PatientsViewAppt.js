@@ -62,12 +62,14 @@ export class PatientsViewAppointments extends Component {
                     <table className="table table-hover">
                         <thead>
                             <tr>
-                            <th>Date of Appointment</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Concerns</th>
-                                <th>Symptoms</th>
-                                <th>Status</th>
+                                <th>预约日期</th>
+                                <th>开始时间</th>
+                                <th>结束时间</th>
+                                <th>就诊原因</th>
+                                <th>症状</th>
+                                <th>状态</th>
+                                <th>诊断</th>
+                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -80,24 +82,26 @@ export class PatientsViewAppointments extends Component {
                                     <td align="center" >{patient.theEnd.substring(0, 5)}</td>
                                     <td align="center">{patient.theConcerns} </td>
                                     <td align="center">{patient.theSymptoms}</td>
-                                    <td align="center">{patient.status}</td>
+                                    <td align="center">{patient.status === 'NotDone' ? '未就诊' : '已就诊'}</td>
                                     <td>
-                                        <Button label="See Diagnosis"
+                                        <Button label="查看诊断"
                                         href={`/showDiagnoses/${patient.ID}`}
                                         ></Button>     
                                     </td> 
                                     <td>
                                     {   patient.status==="NotDone"?
-                                    //1:已就诊，cancel
-                                        <Button label="Cancel"
+                                    //1:未就诊，cancel
+                                        <Button label="取消预约"
                                         onClick = {() => {
-                                            fetch('http://localhost:3001/deleteAppt?uid='+ patient.ID)
-                                            window.location.reload()
+                                            if(window.confirm("确定要取消这个预约吗？")) {
+                                                fetch('http://localhost:3001/deleteAppt?uid='+ patient.ID)
+                                                window.location.reload()
+                                            }
                                         }}
                                         ></Button>
                                         :
                                        //已就诊
-                                      <span style={{color: "gray", padding: "10px"}}>Completed</span>
+                                      <span style={{color: "gray", padding: "10px"}}>已完成</span>
                                     }
                                     </td>
                                 </tr>
@@ -111,7 +115,7 @@ export class PatientsViewAppointments extends Component {
             <Grommet theme={theme} full>
                 <Box >
                     <AppBar>
-                    <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>HMS</Heading></a>
+                    <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>医院管理系统</Heading></a>
                     </AppBar>
                     <Body />
                 </Box>

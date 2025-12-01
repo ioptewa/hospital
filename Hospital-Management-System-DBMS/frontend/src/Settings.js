@@ -52,7 +52,7 @@ export class Settings extends Component {
               href='/'
             >
               <Heading level='3' margin='none' color='white'>
-                HMS
+                医院管理系统
               </Heading>
             </a>
           </AppBar>
@@ -60,7 +60,7 @@ export class Settings extends Component {
           {/* 主体区域 */}
           <Box pad='large' align='center'>
             <Heading level='2' margin='small'>
-              Settings
+              设置 (Settings)
             </Heading>
 
             <Grid
@@ -72,7 +72,7 @@ export class Settings extends Component {
               {/* 修改密码卡片 */}
               <Card elevation='medium' background='white' pad='medium' round='medium'>
                 <CardHeader pad={{ bottom: 'small' }}>
-                  <Text size='large' weight='bold'> Change Password</Text>
+                  <Text size='large' weight='bold'> 修改密码 </Text>
                 </CardHeader>
                 <CardBody>
                   <Form
@@ -90,28 +90,28 @@ export class Settings extends Component {
                             .then(res => {
                               let didUpdate = res.data.affectedRows;
                               if (didUpdate === 0) {
-                                window.alert('Incorrect old password.');
+                                window.alert('旧密码错误。');
                               } else {
-                                window.alert('Password reset successful!');
+                                window.alert('密码修改成功！');
                               }
                             });
                         });
                     }}
                   >
                     <FormField
-                      label='Old Password'
+                      label='旧密码'
                       name='oldPassword'
                       type='password'
                       required
                     />
                     <FormField
-                      label='New Password'
+                      label='新密码'
                       name='newPassword'
                       type='password'
                       required
                     />
                     <Box align='center' pad={{ top: 'medium' }}>
-                      <Button type='submit' label='Change Password' primary />
+                      <Button type='submit' label='确认修改' primary />
                     </Box>
                   </Form>
                 </CardBody>
@@ -120,7 +120,7 @@ export class Settings extends Component {
               {/* 修改邮箱卡片 */}
               <Card elevation='medium' background='white' pad='medium' round='medium'>
                 <CardHeader pad={{ bottom: 'small' }}>
-                  <Text size='large' weight='bold'> Change Email</Text>
+                  <Text size='large' weight='bold'> 修改电子邮箱 </Text>
                 </CardHeader>
                 <CardBody>
                   <Form
@@ -140,28 +140,28 @@ export class Settings extends Component {
                             .then(res => {
                               let didUpdate = res.data.affectedRows;
                               if (didUpdate === 0) {
-                                window.alert('Incorrect password or email already exists.');
+                                window.alert('密码错误或该邮箱已被占用。');
                               } else {
-                                window.alert('Email reset successful!');
+                                window.alert('邮箱修改成功！');
                               }
                             });
                         });
                     }}
                   >
                     <FormField
-                      label='Password (for verification)'
+                      label='验证密码'
                       name='password'
                       type='password'
                       required
                     />
                     <FormField
-                      label='New Email'
+                      label='新电子邮箱'
                       name='newEmail'
                       type='email'
                       required
                     />
                     <Box align='center' pad={{ top: 'medium' }}>
-                      <Button type='submit' label='Change Email' primary />
+                      <Button type='submit' label='确认修改' primary />
                     </Box>
                   </Form>
                 </CardBody>

@@ -60,7 +60,7 @@ export class ViewOneHistory extends Component {
                 align='center'
                 flex={false}
             >
-                <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>HMS</Heading></a>
+                <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>医院管理系统</Heading></a>
             </Box>
         );
         const Body = () => (
@@ -71,23 +71,23 @@ export class ViewOneHistory extends Component {
                             <TableBody>
                                 <TableRow>
                                     <TableCell scope="row">
-                                        <strong>Name</strong>
+                                        <strong>姓名</strong>
                                     </TableCell>
                                     <TableCell>{patient.name}</TableCell>
                                     <TableCell></TableCell>
-                                    <TableCell><strong>Email</strong></TableCell>
+                                    <TableCell><strong>电子邮箱</strong></TableCell>
                                     <TableCell>{patient.email}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell scope="row">
-                                        <strong>Gender</strong>
+                                        <strong>性别</strong>
                                     </TableCell>
                                     <TableCell>
                                         {patient.gender}
                                     </TableCell>
                                     <TableCell />
                                     <TableCell>
-                                        <strong>Address</strong>
+                                        <strong>地址</strong>
                                     </TableCell>
                                     <TableCell>{patient.address}</TableCell>
                                 </TableRow>
@@ -97,7 +97,7 @@ export class ViewOneHistory extends Component {
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>
-                                        <strong>Conditions</strong>
+                                        <strong>既往症</strong>
                                     </TableCell>
                                     <TableCell>{patient.conditions}
                                         </TableCell>
@@ -108,7 +108,7 @@ export class ViewOneHistory extends Component {
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>
-                                        <strong>Surgeries</strong>
+                                        <strong>手术史</strong>
                                     </TableCell>
                                     <TableCell>{patient.surgeries}
                                     </TableCell>
@@ -119,7 +119,7 @@ export class ViewOneHistory extends Component {
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>
-                                        <strong>Medications</strong>
+                                        <strong>药物使用</strong>
                                     </TableCell>
                                     <TableCell>{patient.medication}
                                     </TableCell>
@@ -140,23 +140,23 @@ export class ViewOneHistory extends Component {
                             <TableBody>
                                 <TableRow>
                                     <TableCell scope="row">
-                                        <strong>Date</strong>
+                                        <strong>就诊日期</strong>
                                     </TableCell>
                                     <TableCell>{patient.date.split('T')[0]}</TableCell>
                                     <TableCell></TableCell>
-                                    <TableCell><strong>Doctor</strong></TableCell>
+                                    <TableCell><strong>主治医生</strong></TableCell>
                                     <TableCell>{patient.doctor}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell scope="row">
-                                        <strong>Concerns</strong>
+                                        <strong>就诊原因</strong>
                                     </TableCell>
                                     <TableCell>
                                         {patient.concerns}
                                     </TableCell>
                                     <TableCell />
                                     <TableCell>
-                                        <strong>Symptoms</strong>
+                                        <strong>症状</strong>
                                     </TableCell>
                                     <TableCell>{patient.symptoms}</TableCell>
                                 </TableRow>
@@ -166,7 +166,7 @@ export class ViewOneHistory extends Component {
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>
-                                        <strong>Diagnosis</strong>
+                                        <strong>诊断结果</strong>
                                     </TableCell>
                                     <TableCell>{patient.diagnosis}
                                         </TableCell>
@@ -177,7 +177,7 @@ export class ViewOneHistory extends Component {
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>
-                                        <strong>Prescription</strong>
+                                        <strong>处方</strong>
                                     </TableCell>
                                     <TableCell>{patient.prescription}
                                     </TableCell>
