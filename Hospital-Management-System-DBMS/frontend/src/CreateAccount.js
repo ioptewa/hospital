@@ -7,7 +7,7 @@ import {
   FormField,
   Form,
   Text,
-  Select // --- 修改点1：引入 Select 组件 ---
+  Select 
 } from 'grommet';
 
 import './App.css';
@@ -65,8 +65,8 @@ export class CreateAccount extends Component {
                       window.alert("该邮箱已关联现有账户。");
                       console.log("no user found");
                     } else {
-                      fetch("http://localhost:3001/makeAccount?name=" + value.firstName + 
-                            "&lastname=" + value.lastName + 
+                      // --- 修改点：不再区分 firstname/lastname，只传 name ---
+                      fetch("http://localhost:3001/makeAccount?name=" + value.name + 
                             "&email=" + value.email + 
                             "&password=" + value.password + 
                             "&address=" + value.address + 
@@ -81,20 +81,17 @@ export class CreateAccount extends Component {
                     }
                   });
               }}>
-              <FormField
-                label="名 (First Name)"
-                name="firstName"
-                placeholder="请输入名"
-                required
-                validate={{ regexp: /^[\u4e00-\u9fa5a-zA-Z]+$/, message: "请输入中文或英文字符" }} />
-              <FormField
-                label="姓 (Last Name)"
-                name="lastName"
-                required
-                placeholder="请输入姓"
-                validate={{ regexp: /^[\u4e00-\u9fa5a-zA-Z]+$/, message: "请输入中文或英文字符" }} />
               
-              {/* --- 修改点2：将性别改为下拉选择框 --- */}
+              {/* --- 修改点：合并为一个姓名输入框 --- */}
+              <FormField
+                label="姓名"
+                name="name"
+                placeholder="请输入您的姓名"
+                required
+                validate={{ regexp: /^[\u4e00-\u9fa5a-zA-Z\s]+$/, message: "请输入中文或英文字符" }} 
+              />
+              {/* 删除了原来的 firstName 和 lastName 字段 */}
+              
               <FormField label="性别" name="gender" required>
                 <Select
                   options={['男', '女']}
@@ -102,7 +99,6 @@ export class CreateAccount extends Component {
                   placeholder="请选择性别"
                 />
               </FormField>
-              {/* --- 修改结束 --- */}
 
               <FormField
                 label="年龄"
