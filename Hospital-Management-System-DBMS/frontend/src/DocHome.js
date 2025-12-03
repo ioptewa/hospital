@@ -17,7 +17,7 @@ import {
     Logout
 } from 'grommet-icons';
 
-// 頭像圖片
+// 头像图片
 import maleIcon from './male.png';
 import femaleIcon from './female.png';
 
@@ -61,8 +61,8 @@ export class DocHome extends Component {
 
     state = {
         doctorInfo: {
-            name: "Loading...",
-            email: "Loading...",
+            name: "加载中...",
+            email: "加载中...",
             gender: "",
             age: "",
             address: ""
@@ -85,11 +85,11 @@ export class DocHome extends Component {
                         } else {
                             this.setState({
                                 doctorInfo: {
-                                    name: "Doctor Not Found",
+                                    name: "未找到医生",
                                     email: email_in_use,
-                                    gender: "Unknown",
-                                    age: "Unknown",
-                                    address: "Unknown"
+                                    gender: "未知",
+                                    age: "未知",
+                                    address: "未知"
                                 }
                             });
                         }
@@ -104,7 +104,7 @@ export class DocHome extends Component {
         let rawGender = (doctorInfo.gender || "").toString();
         const genderStr = rawGender.toLowerCase().trim();
 
-        // 性別顯示頭像
+        // 性别显示头像
         let avatarContent;
         const imgStyle = {
             width: '150px',
@@ -140,22 +140,22 @@ export class DocHome extends Component {
                 <Box fill>
                     <AppBar>
                         <Button plain onClick={() => this.setState({ showSidebar: !showSidebar })}>
-                            <Heading level='3' margin='none' color="white">HMS</Heading>
+                            <Heading level='3' margin='none' color="white">医院管理系统</Heading>
                         </Button>
-                        <Heading level='4' margin='none' color="white">Doctor Dashboard</Heading>
+                        <Heading level='4' margin='none' color="white">医生仪表板</Heading>
                     </AppBar>
 
                     <Box direction='row' flex overflow={{ horizontal: 'hidden' }}>
-                        {/* 側邊欄 */}
+                        {/* 侧边栏 */}
                         <Collapsible direction="horizontal" open={showSidebar}>
                             <Box flex width='medium' background='brand' elevation='small' align='start' justify='start'>
                                 <Box fill pad={{ vertical: 'small' }}>
-                                    <MenuButton label="Appointments" icon={<Calendar />} href="/ApptList" />
-                                    <MenuButton label="View Patients" icon={<User />} href="/MedHistView" />
-                                    <MenuButton label="Statistics" icon={<Calendar />} href="/DocStatistics" />
-                                    <MenuButton label="Settings" icon={<SettingsOption />} href="/DocSettings" />
+                                    <MenuButton label="预约" icon={<Calendar />} href="/ApptList" />
+                                    <MenuButton label="查看患者" icon={<User />} href="/MedHistView" />
+                                    <MenuButton label="统计" icon={<Calendar />} href="/DocStatistics" />
+                                    <MenuButton label="设置" icon={<SettingsOption />} href="/DocSettings" />
                                     <Box border={{ side: 'top', color: 'dark-2' }} margin={{ top: 'small' }}>
-                                        <MenuButton label="Log Out" icon={<Logout />} onClick={() => {
+                                        <MenuButton label="退出登录" icon={<Logout />} onClick={() => {
                                             fetch('http://localhost:3001/endSession');
                                             window.location.href = "/";
                                         }} />
@@ -164,31 +164,31 @@ export class DocHome extends Component {
                             </Box>
                         </Collapsible>
 
-                        {/* 主體內容 */}
+                        {/* 主体内容 */}
                         <Box flex align="center" justify="center" background="light-1" pad="medium">
                             <Card width="large" background="white" elevation="medium" round="small" pad="medium">
                                 <CardBody direction="row-responsive" gap="medium" pad="medium">
 
-                                    {/* 左側：头像 + 名字 */}
+                                    {/* 左侧：头像 + 名字 */}
                                     <Box width="medium" align="center" justify="start" pad={{ right: "medium" }}>
                                         {avatarContent}
                                         <Heading level="2" margin="none" textAlign="center">
                                             {doctorInfo.name}
                                         </Heading>
-                                        <Text size="small" color="gray" margin={{ top: "xsmall" }}>Doctor Profile</Text>
+                                        <Text size="small" color="gray" margin={{ top: "xsmall" }}>医生档案</Text>
                                     </Box>
 
-                                    {/* 右側：详细信息 */}
+                                    {/* 右侧：详细信息 */}
                                     <Box flex justify="center" gap="none">
-                                        <InfoRow label="Email" value={doctorInfo.email || "Unknown"} />
-                                        <InfoRow label="Gender" value={doctorInfo.gender || "Unknown"} />
-                                        <InfoRow label="Age" value={doctorInfo.age || "Unknown"} />
-                                        <InfoRow label="Address" value={doctorInfo.address || "Unknown"} />
+                                        <InfoRow label="电子邮箱" value={doctorInfo.email || "未知"} />
+                                        <InfoRow label="性别" value={doctorInfo.gender || "未知"} />
+                                        <InfoRow label="年龄" value={doctorInfo.age || "未知"} />
+                                        <InfoRow label="地址" value={doctorInfo.address || "未知"} />
                                     </Box>
 
                                 </CardBody>
                                 <CardFooter background="light-2" pad="medium" justify="end">
-                                    <Button label="Check Appointments" primary href="/ApptList" />
+                                    <Button label="查看预约" primary href="/ApptList" />
                                 </CardFooter>
                             </Card>
                         </Box>

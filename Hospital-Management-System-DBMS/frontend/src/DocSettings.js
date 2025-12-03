@@ -41,7 +41,27 @@ const AppBar = (props) => (
 );
 
 export class DocSettings extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      passwordMessage: '',
+      emailMessage: '',
+    };
+  }
+
+  // 统一处理消息显示的函数
+  showMessage(type, message) {
+    if (type === 'password') {
+      this.setState({ passwordMessage: message });
+      setTimeout(() => this.setState({ passwordMessage: '' }), 3000);
+    } else if (type === 'email') {
+      this.setState({ emailMessage: message });
+      setTimeout(() => this.setState({ emailMessage: '' }), 3000);
+    }
+  }
+
   render() {
+    const { passwordMessage, emailMessage } = this.state;
     return (
       <Grommet theme={theme} full>
         <Box fill>
@@ -52,7 +72,7 @@ export class DocSettings extends Component {
               href='/'
             >
               <Heading level='3' margin='none' color='white'>
-                HMS
+                医院管理系统
               </Heading>
             </a>
           </AppBar>
@@ -60,7 +80,7 @@ export class DocSettings extends Component {
           {/* 主体区域 */}
           <Box pad='large' align='center'>
             <Heading level='2' margin='small'>
-              Doctor Settings
+              医生设置
             </Heading>
 
             <Grid
@@ -72,7 +92,7 @@ export class DocSettings extends Component {
               {/* 修改密码卡片 */}
               <Card elevation='medium' background='white' pad='medium' round='medium'>
                 <CardHeader pad={{ bottom: 'small' }}>
-                  <Text size='large' weight='bold'>Change Password</Text>
+                  <Text size='large' weight='bold'>修改密码</Text>
                 </CardHeader>
                 <CardBody>
                   <Form
@@ -89,28 +109,35 @@ export class DocSettings extends Component {
                             .then(res => {
                               let didUpdate = res.data.affectedRows;
                               if (didUpdate === 0) {
-                                window.alert('Incorrect old password.');
+                                // 替换 window.alert
+                                this.showMessage('password', '旧密码不正确。');
                               } else {
-                                window.alert('Password reset successful!');
+                                // 替换 window.alert
+                                this.showMessage('password', '密码重置成功！');
                               }
                             });
                         });
                     }}
                   >
                     <FormField
-                      label='Old Password'
+                      label='旧密码'
                       name='oldPassword'
                       type='password'
                       required
                     />
                     <FormField
-                      label='New Password'
+                      label='新密码'
                       name='newPassword'
                       type='password'
                       required
                     />
+                    {passwordMessage && (
+                      <Text size="small" color={passwordMessage.includes('成功') ? 'status-ok' : 'status-error'} margin={{ top: 'small', bottom: 'small' }}>
+                        {passwordMessage}
+                      </Text>
+                    )}
                     <Box align='center' pad={{ top: 'medium' }}>
-                      <Button type='submit' label='Change Password' primary />
+                      <Button type='submit' label='修改密码' primary />
                     </Box>
                   </Form>
                 </CardBody>
@@ -119,7 +146,7 @@ export class DocSettings extends Component {
               {/* 修改邮箱卡片 */}
               <Card elevation='medium' background='white' pad='medium' round='medium'>
                 <CardHeader pad={{ bottom: 'small' }}>
-                  <Text size='large' weight='bold'>Change Email</Text>
+                  <Text size='large' weight='bold'>修改电子邮箱</Text>
                 </CardHeader>
                 <CardBody>
                   <Form
@@ -137,28 +164,35 @@ export class DocSettings extends Component {
                             .then(res => {
                               let didUpdate = res.data.affectedRows;
                               if (didUpdate === 0) {
-                                window.alert('Incorrect password or email already exists.');
+                                // 替换 window.alert
+                                this.showMessage('email', '密码不正确或新邮箱已被注册。');
                               } else {
-                                window.alert('Email reset successful!');
+                                // 替换 window.alert
+                                this.showMessage('email', '电子邮箱重置成功！');
                               }
                             });
                         });
                     }}
                   >
                     <FormField
-                      label='Password (for verification)'
+                      label='密码 (用于验证)'
                       name='password'
                       type='password'
                       required
                     />
                     <FormField
-                      label='New Email'
+                      label='新电子邮箱'
                       name='newEmail'
                       type='email'
                       required
                     />
+                    {emailMessage && (
+                      <Text size="small" color={emailMessage.includes('成功') ? 'status-ok' : 'status-error'} margin={{ top: 'small', bottom: 'small' }}>
+                        {emailMessage}
+                      </Text>
+                    )}
                     <Box align='center' pad={{ top: 'medium' }}>
-                      <Button type='submit' label='Change Email' primary />
+                      <Button type='submit' label='修改电子邮箱' primary />
                     </Box>
                   </Form>
                 </CardBody>

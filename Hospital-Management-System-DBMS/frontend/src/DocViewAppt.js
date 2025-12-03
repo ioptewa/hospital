@@ -4,6 +4,7 @@ import {
     Button,
     Heading,
     Grommet,
+    Text, // Add Text for table content if needed, although mostly using raw HTML structure
 } from 'grommet';
 
 import './App.css';
@@ -21,20 +22,25 @@ const theme = {
   };
 
 export class DocViewAppt extends Component {
+    // 状态用于存储预约列表
     state = { apptlist: [] }
 
     componentDidMount() {
         this.getNames();
     }
 
+    // 获取预约信息的函数
     getNames() {
         fetch('http://localhost:3001/doctorViewAppt')
         .then(res => res.json())
-        .then(res => this.setState({ apptlist: res.data }));
+        .then(res => this.setState({ apptlist: res.data }))
+        .catch(error => console.error("Error fetching appointments:", error));
     }
 
     render() {
         const { apptlist } = this.state;
+        
+        // 头部组件
         const Header = () => (
             <Box
                 tag='header'
@@ -46,63 +52,84 @@ export class DocViewAppt extends Component {
                 align='center'
                 flex={false}
             >
-                <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>HMS</Heading></a>
+                {/* 医院管理系统标题和首页链接 */}
+                <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none' color="white">医院管理系统</Heading></a>
             </Box>
         );
 
+        // 主体内容组件
         const Body = () => (
-            <div className="container">
-                <div className="panel panel-default p50 uth-panel">
-                    <table className="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Date</th>
-                                <th>Start Time</th>
-                                <th>Concerns</th>
-                                <th>Symptoms</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {apptlist.map(appt =>
-                                <tr key={appt.name}>
-                                    <td>{appt.id}</td>
-                                    <td>{appt.name}</td>
-                                    <td>{new Date(appt.date).toLocaleDateString().substring(0,10)} </td>
-                                    <td>{appt.starttime}</td>
-                                    <td>{appt.concerns}</td>
-                                    <td>{appt.symptoms}</td>
-                                    <td>{appt.status}</td>
-                                    <td>
-                                        <Button label="Diagnose"
-                                        href={`/Diagnose/${appt.id}`}
-                                        ></Button>     
-                                    </td> 
-                                    <td>
-                                        {appt.status === "NotDone"?
-                                            <Button label="Cancel"
-                                            onClick = {() => {
-                                                fetch('http://localhost:3001/deleteAppt?uid='+ appt.id)
-                                                window.location.reload();
-                                            }}
-                                            ></Button>
-                                        :<div></div>}
-                                    </td> 
+            <Box align="center" pad="medium">
+                <Heading level="2" margin={{ top: 'none', bottom: 'medium' }}>我的预约列表</Heading>
+                
+                {/* 仅使用 Box 作为容器，保持原始的 HTML table 结构 */}
+                <Box width="xlarge" background="white" pad="medium" elevation="small" round="small">
+                    {apptlist.length > 0 ? (
+                        <table className="table table-hover" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead style={{ backgroundColor: '#f5f5f5' }}>
+                                <tr>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>编号</th>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>患者姓名</th>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>日期</th>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>开始时间</th>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>主诉</th>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>症状</th>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>状态</th>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}>操作</th>
+                                    <th style={{ padding: '12px', textAlign: 'left' }}></th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                            </thead>
+                            <tbody>
+                                {apptlist.map(appt =>
+                                    <tr key={appt.id} style={{ borderBottom: '1px solid #eee' }}>
+                                        <td style={{ padding: '12px' }}>{appt.id}</td>
+                                        <td style={{ padding: '12px' }}>{appt.name}</td>
+                                        <td style={{ padding: '12px' }}>{new Date(appt.date).toLocaleDateString()} </td>
+                                        <td style={{ padding: '12px' }}>{appt.starttime}</td>
+                                        <td style={{ padding: '12px' }}>{appt.concerns}</td>
+                                        <td style={{ padding: '12px' }}>{appt.symptoms}</td>
+                                        <td style={{ padding: '12px' }}>{appt.status === "NotDone" ? "未完成" : appt.status}</td>
+                                        <td style={{ padding: '12px' }}>
+                                            <Button label="诊断"
+                                            href={`/Diagnose/${appt.id}`}
+                                            primary
+                                            size="small"
+                                            ></Button> 
+                                        </td> 
+                                        <td style={{ padding: '12px' }}>
+                                            {appt.status === "NotDone"?
+                                                <Button label="取消"
+                                                color="status-critical"
+                                                size="small"
+                                                onClick = {() => {
+                                                    fetch('http://localhost:3001/deleteAppt?uid='+ appt.id, { method: 'DELETE' })
+                                                    .then(() => {
+                                                        // 成功取消后，重新获取列表数据
+                                                        this.getNames();
+                                                    })
+                                                    .catch(error => console.error("Error canceling appointment:", error));
+                                                }}
+                                                ></Button>
+                                            : <Text size="small" color="dark-3">已处理</Text>}
+                                        </td> 
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <Box pad="large" align="center">
+                            <Text size="large">暂无预约信息。</Text>
+                        </Box>
+                    )}
+                </Box>
+            </Box>
 
         );
+        
         return (
-            <Grommet full={true}
-            theme = {theme}>
+            <Grommet full={true} theme={theme}>
                 <Header />
-                <Box fill={true}>
+                <Box fill={true} background="light-1">
                     <Body />
                 </Box>
             </Grommet>
