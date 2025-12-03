@@ -45,24 +45,25 @@ export class MakeDoc extends Component {
         return (
             <Grommet theme={theme} full>
                 <AppBar>
-                <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>HMS</Heading></a>
+                <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none'>医院管理系统</Heading></a>
                 </AppBar>
                 <Box fill align="center" justify="top">
                     <Box width="medium">
-                    <Text color = "#AAAAAA">Doctor's registration form:</Text>
+                    <Text color = "#AAAAAA">医生注册表单：</Text>
                         <Form
                             onReset={event => console.log(event)}
                             method="post"
                             onSubmit={({ value }) => {
-                                console.log("Submit", value);
+                                console.log("提交", value);
                                 console.log(value.email)
                                 fetch("http://localhost:3001/checkIfDocExists?email=" + value.email)
                                     .then(res => res.json())
                                     .then(res => {
                                         console.log(res.data[0]);
                                         if ((res.data[0])) {
-                                            window.alert("A doctor is already associated with that email.");
-                                            console.log("no user found");
+                                            // 保持 window.alert，但汉化内容
+                                            window.alert("该电子邮件已关联医生账户。");
+                                            console.log("未找到用户");
                                         } else {
                                             fetch("http://localhost:3001/makeDocAccount?name=" + value.firstName + "&lastname=" + value.lastName + "&email=" + value.email
                                                 + "&password=" + value.password + "&gender=" + value.gender + "&schedule=" + value.schedule);
@@ -71,47 +72,47 @@ export class MakeDoc extends Component {
                                     });
                             }} >
                             <FormField
-                                label="First Name"
+                                label="名字"
                                 name="firstName"
                                 required
-                                placeholder="Please enter your first name."
-                                validate={{ regexp: /^[a-z]/i }} />
+                                placeholder="请输入您的名字"
+                                validate={{ regexp: /^[a-z]/i, message: "名字开头必须是字母" }} />
                             <FormField
-                                label="Last Name"
+                                label="姓氏"
                                 name="lastName"
                                 required
-                                placeholder="Please enter your last name."
-                                validate={{ regexp: /^[a-z]/i }} />
+                                placeholder="请输入您的姓氏"
+                                validate={{ regexp: /^[a-z]/i, message: "姓氏开头必须是字母" }} />
                             <FormField
-                                label="Email"
+                                label="电子邮箱"
                                 name="email"
                                 type="email"
-                                placeholder="Please enter your email."
+                                placeholder="请输入您的电子邮箱"
                                 required />
                             <FormField
-                                label="Schedule No"
+                                label="排班编号"
                                 name="schedule"
-                                placeholder="Please enter schedule number"
+                                placeholder="请输入排班编号"
                                 required />
                             <FormField
-                                label="Gender"
+                                label="性别"
                                 name="gender"
-                                placeholder="Female or Male"
+                                placeholder="女性或男性"
                                 required />
                             <FormField
-                                label="Password"
+                                label="密码"
                                 name="password"
                                 required
-                                placeholder="Please enter your password."
-                                validate={{ regexp: /^(?=.{8,})(?=.*[0-9]{2})/, message: "@ least 8 characters containing 2 digits" }} />
+                                placeholder="请输入您的密码"
+                                validate={{ regexp: /^(?=.{8,})(?=.*[0-9]{2})/, message: "密码长度至少8个字符，且包含至少2位数字" }} />
                             <Box direction="row" align="center" >
                                 <Button
                                     style={{ textAlign: 'center' }}
-                                    label="Cancel"
+                                    label="取消"
                                     fill="horizontal"
                                     href="/" />
                                 <Button
-                                    label="Sign Up"
+                                    label="注册"
                                     fill="horizontal"
                                     type="submit"
                                     primary />
