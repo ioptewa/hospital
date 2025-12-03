@@ -141,44 +141,32 @@ app.get('/checkIfDocExists', (req, res) => {
 });
 
 //Makes Doctor Account
-// 注册 (支持中文姓名直接输入)
-app.get('/makeAccount', (req, res) => {
-  let query = req.query;
-  
-  let name = query.name; 
-  
-  let email = query.email;
-  let password = query.password;
-  let address = query.address;
-  let gender = query.gender;
-  let age = query.age || 0;
-  let height = query.height || "";
-  let weight = query.weight || "";
-  let medications = query.medications || "无";
-  let conditions = query.conditions || "无";
-  let surgeries = query.surgeries || "无";
-
-  let sql_statement = `INSERT INTO Patient (email, password, name, address, gender, age, height, weight) 
-                       VALUES ("${email}", "${password}", "${name}", "${address}", "${gender}", ${age}, "${height}", "${weight}")`;
-
-  con.query(sql_statement, function (error, results) {
+app.get('/makeDocAccount', (req, res) => {
+  let params = req.query;
+  let name = params.name + " " + params.lastname;
+  let email = params.email;
+  let password = params.password;
+  let gender = params.gender;
+  let schedule = params.schedule;
+  let sql_statement = `INSERT INTO Doctor (email, gender, password, name) 
+                       VALUES ` + `("${email}", "${gender}", "${password}", "${name}")`;
+  console.log(sql_statement);
+  con.query(sql_statement, function (error, results, fields) {
     if (error) throw error;
-    
-    email_in_use = email;
-    password_in_use = password;
-    who = "pat";
-    
-    // 初始化病史记录
-    con.query('SELECT id FROM MedicalHistory ORDER BY id DESC LIMIT 1;', (err, resId) => {
-        let newId = (resId[0]?.id || 0) + 1;
-        let sql2 = `INSERT INTO MedicalHistory (id, date, conditions, surgeries, medication) VALUES ("${newId}", curdate(), "${conditions}", "${surgeries}", "${medications}")`;
-        con.query(sql2, () => {
-            let sql3 = `INSERT INTO PatientsFillHistory (patient, history) VALUES ("${email}",${newId})`;
-            con.query(sql3);
-        });
-    });
-    
-    return res.json({ data: results });
+    else {
+      let sql_statement = `INSERT INTO DocsHaveSchedules (sched, doctor) 
+                       VALUES ` + `(${schedule}, "${email}")`;
+      console.log(sql_statement);
+      con.query(sql_statement, function (error) {
+        if (error) throw error;
+      })
+      email_in_use = email;
+      password_in_use = password;
+      who = 'doc';
+      return res.json({
+        data: results
+      })
+    };
   });
 });
 
