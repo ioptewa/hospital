@@ -114,10 +114,13 @@ export class DocHome extends Component {
             marginBottom: '15px'
         };
 
-        if (["male", "man", "boy", "m"].includes(genderStr)) {
+        // ==========================================
+        // 修改重点：这里加入了中文 "男" 和 "女" 的识别
+        // ==========================================
+        if (["male", "man", "boy", "m", "男"].includes(genderStr)) {
             avatarContent = <img src={maleIcon} alt="Male Avatar" style={imgStyle} />;
         }
-        else if (["female", "woman", "girl", "f"].includes(genderStr)) {
+        else if (["female", "woman", "girl", "f", "女"].includes(genderStr)) {
             avatarContent = <img src={femaleIcon} alt="Female Avatar" style={imgStyle} />;
         }
         else {
