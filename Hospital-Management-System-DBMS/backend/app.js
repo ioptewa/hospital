@@ -604,23 +604,23 @@ app.get('/checkIfApptExists', (req, res) => {
 
       // ③ 检查医生是否在该时间不在排班表（休息或非工作时段）
       let statement3 = `
-        SELECT doctor, starttime, endtime, breaktime, day FROM DocsHaveSchedules 
-        INNER JOIN Schedule ON DocsHaveSchedules.sched = Schedule.id
-        WHERE doctor = "${doc_email}"
-        AND day = DAYNAME(${sql_date})
-        AND (
-          DATE_ADD(${sql_start}, INTERVAL +1 HOUR) <= breaktime 
-          OR ${sql_start} >= DATE_ADD(breaktime, INTERVAL +1 HOUR)
-        );
-      `;
-      console.log("SQL#3:", statement3);
+  SELECT s.id FROM DocsHaveSchedules dhs
+  INNER JOIN Schedule s ON dhs.sched = s.id
+  WHERE dhs.doctor = "${doc_email}"
+  AND s.day = DAYNAME(${sql_date})
+  AND (
+    ${sql_start} < s.starttime 
+    OR ${sql_start} >= s.endtime
+    OR (${sql_start} >= s.breaktime AND ${sql_start} < DATE_ADD(s.breaktime, INTERVAL 1 HOUR))
+  );
+`;
+      console.log("SQL#3 (Check Inaccessibility):", statement3);
 
       con.query(statement3, function (error, results3) {
         if (error) {
           console.error("❌ SQL#3 Error:", error);
           return res.status(500).json({ error: "Database error 3" });
         }
-
         if (results3.length) {
           cond3 = [1]; // 医生不在班
         } else {
