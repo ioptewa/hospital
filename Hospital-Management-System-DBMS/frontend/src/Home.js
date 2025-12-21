@@ -108,6 +108,7 @@ export class Home extends Component {
     render() {
         const { patientInfo, showSidebar } = this.state;
 
+        // 1. 获取性别字符串并清理空格
         let rawGender = (patientInfo.gender || "").toString();
         const genderStr = rawGender.toLowerCase().trim(); 
 
@@ -115,20 +116,24 @@ export class Home extends Component {
 
         // 头像样式
         const imgStyle = {
-            width: '150px',  // 头像稍微改大了一点，更有气势
+            width: '150px',  
             height: '150px',
             borderRadius: '50%',
             objectFit: 'cover',
-            marginBottom: '15px' // 头像和名字之间的距离
+            marginBottom: '15px' 
         };
         
-        if (["male", "man", "boy", "m"].includes(genderStr)) {
+        // ==========================================
+        // 修改重点：这里加入了中文 "男" 和 "女" 的识别
+        // ==========================================
+        if (["male", "man", "boy", "m", "男"].includes(genderStr)) {
             avatarContent = <img src={maleIcon} alt="Male Avatar" style={imgStyle} />;
         } 
-        else if (["female", "woman", "girl", "f"].includes(genderStr)) {
+        else if (["female", "woman", "girl", "f", "女"].includes(genderStr)) {
             avatarContent = <img src={femaleIcon} alt="Female Avatar" style={imgStyle} />;
         } 
         else {
+            // 默认头像
             avatarContent = (
                 <Box width="150px" height="150px" background="light-4" round="full" align="center" justify="center" margin={{bottom: 'small'}}>
                      <User size="large" color="white" />
@@ -162,15 +167,14 @@ export class Home extends Component {
                                        label="查看病史" 
                                        icon={<History />} 
                                        onClick={() => {
-                                       // 使用当前 state 中获取到的病人 email 进行跳转
-                                       const email = this.state.patientInfo.email;
-                                       if (email && email !== "Loading..." && email !== "未找到用户") {
-                                       window.location.href = "/ViewOneHistory/" + email;
-                                       } else {
-                                        window.alert("正在加载用户信息，请稍后再试...");
-                                       }
-                                     }}
-/>
+                                         const email = this.state.patientInfo.email;
+                                         if (email && email !== "Loading..." && email !== "未找到用户") {
+                                           window.location.href = "/ViewOneHistory/" + email;
+                                         } else {
+                                            window.alert("正在加载用户信息，请稍后再试...");
+                                         }
+                                      }}
+                                    />
                                     <MenuButton label="预约挂号" icon={<ScheduleNew />} href="/scheduleAppt" />
                                     <MenuButton label="预约记录" icon={<Clipboard />} href="/PatientsViewAppt" />
                                     <MenuButton label="设置" icon={<SettingsOption />} href="/Settings" />
@@ -188,10 +192,9 @@ export class Home extends Component {
                         {/* 内容区域 */}
                         <Box flex align="center" justify="center" background="light-1" pad="medium">
                             <Card width="large" background="white" elevation="medium" round="small" pad="medium">
-                                {/* 修改点：gap 改为 small 以缩短距离 */}
                                 <CardBody direction="row-responsive" gap="small" pad="medium">
                                     
-                                    {/* --- 左侧列：宽度改为 small (之前是 medium)，缩短与右侧的距离 --- */}
+                                    {/* --- 左侧列：头像和名字 --- */}
                                     <Box width="small" align="center" justify="start" pad={{ right: "small" }}>
                                         {avatarContent}
                                         <Heading level="2" margin="none" textAlign="center">
