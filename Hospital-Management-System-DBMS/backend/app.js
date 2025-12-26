@@ -220,6 +220,7 @@ app.get('/doctorStatistics', (req, res) => {
   INNER JOIN PatientsAttendAppointments psa ON p.email = psa.patient
   INNER JOIN Diagnose d ON psa.appt = d.appt
   WHERE d.doctor = ?
+  AND p.gender IN ('Male', 'Female', '男', '女') 
   GROUP BY p.gender`;
 
   console.log("Executing queries for doctor:", doctorEmail);

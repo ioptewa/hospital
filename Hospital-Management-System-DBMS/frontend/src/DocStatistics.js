@@ -8,7 +8,6 @@ import {
   CardHeader,
   Text,
   Button,
-  Grid,
   ResponsiveContext
 } from "grommet";
 import { FormPreviousLink } from 'grommet-icons';
@@ -102,13 +101,13 @@ const AnimationStyles = () => (
     .chart-container {
       min-width: 0; /* 防止flex溢出 */
     }
-    /* 新增：优化条形图悬停效果 */
+    /* 优化条形图悬停效果 */
     .bar-hover:hover {
       opacity: 0.8;
       transform: translateY(-2px);
       transition: all 0.2s ease;
     }
-    /* 新增：饼图悬停效果 */
+    /* 饼图悬停效果 */
     .pie-segment:hover {
       filter: brightness(1.1);
       transform: scale(1.02);
@@ -119,10 +118,9 @@ const AnimationStyles = () => (
 );
 
 // ==========================================
-// 2. 图表组件
+// 2. 图表组件 (保持不变)
 // ==========================================
 
-// 更紧凑的统计卡片
 const CompactStatCard = ({ title, value, subtitle, color = "brand" }) => (
   <Card background="white" pad="xsmall" elevation="small" className="fade-in-up compact-card" justify="center">
     <Box>
@@ -133,13 +131,10 @@ const CompactStatCard = ({ title, value, subtitle, color = "brand" }) => (
   </Card>
 );
 
-// 柱状图 - 修复显示问题
 const BarChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) => {
   if (!data || data.length === 0) return <Box pad="medium"><Text>暂无数据</Text></Box>;
   
-  // 确保最小值为0，防止负数
-  const minValue = 0;
-  const maxValue = Math.max(...data, 1) * 1.3; // 确保最大值为正数
+  const maxValue = Math.max(...data, 1) * 1.3;
 
   return (
     <ResponsiveContext.Consumer>
@@ -147,7 +142,6 @@ const BarChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) 
         const isSmall = size === 'small';
         return (
           <Box height={`${height}px`} pad={{ bottom: "xsmall" }} justify="end" className="chart-container">
-            {/* Y轴刻度 */}
             <Box style={{ position: 'absolute', left: 0, top: 0, bottom: 25, width: 30 }}>
               {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
                 const value = Math.round(maxValue * ratio);
@@ -174,10 +168,9 @@ const BarChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) 
               justify="between" 
               height="100%" 
               border={{ side: 'bottom', color: CHART_COLORS.grid }}
-              pad={{ left: '30px' }} // 为Y轴标签留出空间
+              pad={{ left: '30px' }}
             >
               {data.map((value, index) => {
-                // 计算柱形高度百分比，确保最小高度为1%
                 const heightPercent = Math.max((value / maxValue) * 100, 1);
                 
                 return (
@@ -189,7 +182,6 @@ const BarChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) 
                     margin={{ horizontal: "xxsmall" }}
                     style={{ position: 'relative', height: '100%' }}
                   >
-                    {/* 柱形 */}
                     <Box 
                       className="chart-bar bar-hover" 
                       background={color}
@@ -212,7 +204,6 @@ const BarChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) 
                       }}
                     />
                     
-                    {/* 悬停时显示的数值 */}
                     <Box
                       className="value-tooltip"
                       style={{
@@ -235,7 +226,6 @@ const BarChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) 
                       {value} 人
                     </Box>
                     
-                    {/* 底部数值 */}
                     <Text 
                       size="xsmall" 
                       weight="bold" 
@@ -252,7 +242,6 @@ const BarChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) 
               })}
             </Box>
             
-            {/* X轴标签 */}
             <Box 
               direction="row" 
               justify="between" 
@@ -285,8 +274,6 @@ const BarChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) 
   );
 };
 
-// 折线图 - 优化间距
-// 折线图 - 优化间距（月份标签完全对齐版本）
 const LineChart = ({ data, labels, height = 220 }) => {
   if (!data || data.length === 0)
     return (
@@ -341,7 +328,6 @@ const LineChart = ({ data, labels, height = 220 }) => {
           overflow: "visible",
         }}
       >
-        {/* Y轴刻度标签 */}
         {yTicks.map((value, i) => {
           const y = getY(value);
           return (
@@ -360,7 +346,6 @@ const LineChart = ({ data, labels, height = 220 }) => {
           );
         })}
 
-        {/* 背景横线 */}
         {yTicks.map((_, i) => {
           const y = getY(yTicks[i]);
           return (
@@ -384,7 +369,6 @@ const LineChart = ({ data, labels, height = 220 }) => {
           </linearGradient>
         </defs>
 
-        {/* 填充区域 */}
         <path
           d={`${generateBezierPath()} L ${points[points.length - 1].x},${svgHeight - padding.bottom} L ${
             points[0].x
@@ -393,7 +377,6 @@ const LineChart = ({ data, labels, height = 220 }) => {
           className="fade-in-up"
         />
 
-        {/* 折线 */}
         <path
           d={generateBezierPath()}
           fill="none"
@@ -403,7 +386,6 @@ const LineChart = ({ data, labels, height = 220 }) => {
           className="chart-line-path"
         />
 
-        {/* 数据点 */}
         {points.map((p, i) => (
           <g key={`point-${i}`}>
             <circle
@@ -419,7 +401,6 @@ const LineChart = ({ data, labels, height = 220 }) => {
               <title>{p.value} 人</title>
             </circle>
 
-            {/* 数据点数值 */}
             <text
               x={p.x}
               y={p.y - 10}
@@ -434,7 +415,6 @@ const LineChart = ({ data, labels, height = 220 }) => {
           </g>
         ))}
 
-        {/* X轴标签（SVG 内，与数据点完全对齐） */}
         {points.map((p, i) => (
           <text
             key={`x-label-${i}`}
@@ -454,8 +434,6 @@ const LineChart = ({ data, labels, height = 220 }) => {
   );
 };
 
-
-// 饼图 - 增大尺寸，优化显示
 const PieChart = ({ data, labels, colors }) => {
     const total = data.reduce((sum, value) => sum + value, 0) || 1;
     let currentAngle = 0;
@@ -463,7 +441,6 @@ const PieChart = ({ data, labels, colors }) => {
     const segments = data.map((value, index) => {
       const angle = (value / total) * 360;
       const largeArcFlag = angle > 180 ? 1 : 0;
-      // 增大饼图半径从30到40
       const radius = 40;
       const startX = 50 + radius * Math.cos(currentAngle * Math.PI / 180);
       const startY = 50 + radius * Math.sin(currentAngle * Math.PI / 180);
@@ -497,7 +474,7 @@ const PieChart = ({ data, labels, colors }) => {
               className="fade-in-up chart-container"
             >
               <Box 
-                width={isSmall ? '180px' : '200px'} // 增大饼图容器尺寸
+                width={isSmall ? '180px' : '200px'} 
                 height={isSmall ? '180px' : '200px'}
                 flex={false}
                 align="center"
@@ -511,7 +488,6 @@ const PieChart = ({ data, labels, colors }) => {
                     transform: 'rotate(-90deg)'
                   }}
                 >
-                  {/* 饼图中心显示总数 */}
                   <text
                     x="50"
                     y="50"
@@ -540,7 +516,7 @@ const PieChart = ({ data, labels, colors }) => {
                       d={s.path} 
                       fill={s.color} 
                       stroke="white" 
-                      strokeWidth="2" // 增加边框宽度
+                      strokeWidth="2"
                       className="pie-segment"
                       style={{ 
                         transition: "all 0.3s",
@@ -639,44 +615,53 @@ const PieChart = ({ data, labels, colors }) => {
   };
 
 // ==========================================
-// 3. 主页面逻辑
+// 3. 主页面逻辑 (核心修改区域)
 // ==========================================
 export default class DocStatistics extends Component {
+  // 1. 初始化 State
   state = {
     loading: true,
+    apptStats: [],
+    genderStats: []
   };
 
   componentDidMount() {
-    setTimeout(() => {
-        this.setState({ loading: false });
-    }, 800); 
+    // 2. 组件加载后请求真实数据
+    this.fetchStatistics();
   }
 
-  getMockData() {
-      return {
-        apptStats: [
-            { month: "1月", count: 25, newPatients: 18 },
-            { month: "2月", count: 42, newPatients: 22 },
-            { month: "3月", count: 38, newPatients: 15 },
-            { month: "4月", count: 65, newPatients: 34 },
-            { month: "5月", count: 52, newPatients: 28 },
-            { month: "6月", count: 85, newPatients: 45 },
-        ],
-        genderStats: [
-            { gender: "男性", value: 120 },
-            { gender: "女性", value: 160 },
-            { gender: "其他", value: 15 },
-        ]
-      }
+  fetchStatistics = () => {
+    // 假设后端运行在 localhost:3001
+    fetch('http://localhost:3001/doctorStatistics')
+      .then(res => {
+        if (!res.ok) throw new Error("Network response was not ok");
+        return res.json();
+      })
+      .then(res => {
+        // 更新 State，后端已经过滤了脏数据
+        this.setState({ 
+          apptStats: res.apptStats || [], 
+          genderStats: res.genderStats || [],
+          loading: false 
+        });
+      })
+      .catch(err => {
+        console.error("Error fetching statistics:", err);
+        // 出错也停止 loading，以免界面卡死
+        this.setState({ loading: false });
+      });
   }
 
   render() {
-    const { loading } = this.state;
-    const { apptStats, genderStats } = this.getMockData();
+    // 3. 从 State 获取数据，不再使用 mockData
+    const { loading, apptStats, genderStats } = this.state;
     
+    // 计算统计概览
     const totalAppointments = apptStats.reduce((sum, item) => sum + item.count, 0);
     const totalNewPatients = apptStats.reduce((sum, item) => sum + item.newPatients, 0);
-    const avgAppointments = Math.round(totalAppointments / apptStats.length);
+    const avgAppointments = apptStats.length > 0 
+        ? Math.round(totalAppointments / apptStats.length) 
+        : 0;
 
     return (
       <Grommet theme={theme} full>
@@ -741,14 +726,14 @@ export default class DocStatistics extends Component {
                         <CompactStatCard 
                           title="总预约数" 
                           value={totalAppointments} 
-                          subtitle="2024年度累计" 
+                          subtitle="近12个月累计" 
                         />
                       </Box>
                       <Box flex basis="32%" style={{ minWidth: '100px' }}>
                         <CompactStatCard 
                           title="新增患者" 
                           value={totalNewPatients} 
-                          subtitle="本季度新增"
+                          subtitle="新增档案数"
                           color={CHART_COLORS.secondary}
                         />
                       </Box>
@@ -768,90 +753,98 @@ export default class DocStatistics extends Component {
                         </Box>
                     ) : (
                       <Box gap="small">
-                        
-                        {/* 折线图 - 预约趋势 */}
-                        <Card background="white" elevation="small" className="fade-in-up">
-                          <CardHeader 
-                            pad={{ horizontal: "small", vertical: "xsmall" }} 
-                            border={{ side: "bottom", color: "light-2" }}
-                          >
-                            <Box>
-                              <Text weight="bold" size="medium" style={{ fontSize: '14px' }}>每月预约趋势</Text>
-                              <Text size="xsmall" color="dark-4" style={{ fontSize: '10px' }}>过去6个月的接诊量变化 (单位: 人)</Text>
+                        {/* 如果没有数据时的处理 */}
+                        {apptStats.length === 0 && genderStats.length === 0 ? (
+                            <Box pad="large" align="center" justify="center">
+                                <Text color="dark-4">暂无统计数据，请等待产生诊疗记录。</Text>
                             </Box>
-                          </CardHeader>
-                          <CardBody 
-                            pad={{ horizontal: "xsmall", vertical: "xsmall" }}
-                            style={{ overflow: 'visible' }}
-                          >
-                            <Box style={{ minHeight: '240px', overflow: 'visible' }}>
-                              <LineChart 
-                                data={apptStats.map(i => i.count)} 
-                                labels={apptStats.map(i => i.month)} 
-                                height={200}
-                              />
+                        ) : (
+                          <>
+                            {/* 折线图 - 预约趋势 */}
+                            <Card background="white" elevation="small" className="fade-in-up">
+                              <CardHeader 
+                                pad={{ horizontal: "small", vertical: "xsmall" }} 
+                                border={{ side: "bottom", color: "light-2" }}
+                              >
+                                <Box>
+                                  <Text weight="bold" size="medium" style={{ fontSize: '14px' }}>每月预约趋势</Text>
+                                  <Text size="xsmall" color="dark-4" style={{ fontSize: '10px' }}>过去12个月的接诊量变化 (单位: 人)</Text>
+                                </Box>
+                              </CardHeader>
+                              <CardBody 
+                                pad={{ horizontal: "xsmall", vertical: "xsmall" }}
+                                style={{ overflow: 'visible' }}
+                              >
+                                <Box style={{ minHeight: '240px', overflow: 'visible' }}>
+                                  <LineChart 
+                                    data={apptStats.map(i => i.count)} 
+                                    labels={apptStats.map(i => i.month)} 
+                                    height={200}
+                                  />
+                                </Box>
+                              </CardBody>
+                            </Card>
+
+                            {/* 两个小图表并排 */}
+                            <Box direction={isSmall ? 'column' : 'row'} gap="small">
+                              
+                              {/* 柱状图 - 新增患者 */}
+                              <Card 
+                                background="white" 
+                                elevation="small" 
+                                className="fade-in-up"
+                                flex={isSmall ? false : true}
+                              >
+                                <CardHeader 
+                                  pad={{ horizontal: "small", vertical: "xsmall" }} 
+                                  border={{ side: "bottom", color: "light-2" }}
+                                >
+                                  <Box>
+                                    <Text weight="bold" size="medium" style={{ fontSize: '14px' }}>新增患者统计</Text>
+                                    <Text size="xsmall" color="dark-4" style={{ fontSize: '10px' }}>按月统计的新建档案数量</Text>
+                                  </Box>
+                                </CardHeader>
+                                <CardBody pad={{ horizontal: "xsmall", vertical: "xsmall" }}>
+                                  <Box style={{ position: 'relative', height: '220px' }}>
+                                    <BarChart 
+                                      data={apptStats.map(i => i.newPatients)} 
+                                      labels={apptStats.map(i => i.month)} 
+                                      color={CHART_COLORS.secondary}
+                                      height={200}
+                                    />
+                                  </Box>
+                                </CardBody>
+                              </Card>
+
+                              {/* 饼图 - 患者性别分布 */}
+                              <Card 
+                                background="white" 
+                                elevation="small" 
+                                className="fade-in-up"
+                                flex={isSmall ? false : true}
+                              >
+                                <CardHeader 
+                                  pad={{ horizontal: "small", vertical: "xsmall" }} 
+                                  border={{ side: "bottom", color: "light-2" }}
+                                >
+                                  <Text weight="bold" size="medium" style={{ fontSize: '14px' }}>患者性别分布</Text>
+                                </CardHeader>
+                                <CardBody pad={{ 
+                                  horizontal: isSmall ? 'xsmall' : 'small', 
+                                  vertical: 'small'
+                                }}>
+                                  <PieChart 
+                                    data={genderStats.map(i => i.value)} 
+                                    labels={genderStats.map(i => i.gender)}
+                                    // 确保颜色足够循环
+                                    colors={[CHART_COLORS.primary, CHART_COLORS.secondary, CHART_COLORS.tertiary]}
+                                  />
+                                </CardBody>
+                              </Card>
+
                             </Box>
-                          </CardBody>
-                        </Card>
-
-                        {/* 两个小图表并排 */}
-                        <Box direction={isSmall ? 'column' : 'row'} gap="small">
-                          
-                          {/* 柱状图 - 新增患者 */}
-                          <Card 
-                            background="white" 
-                            elevation="small" 
-                            className="fade-in-up"
-                            flex={isSmall ? false : true}
-                          >
-                            <CardHeader 
-                              pad={{ horizontal: "small", vertical: "xsmall" }} 
-                              border={{ side: "bottom", color: "light-2" }}
-                            >
-                              <Box>
-                                <Text weight="bold" size="medium" style={{ fontSize: '14px' }}>新增患者统计</Text>
-                                <Text size="xsmall" color="dark-4" style={{ fontSize: '10px' }}>按月统计的新建档案数量 (单位: 人)</Text>
-                              </Box>
-                            </CardHeader>
-                            <CardBody pad={{ horizontal: "xsmall", vertical: "xsmall" }}>
-                              <Box style={{ position: 'relative', height: '220px' }}>
-                                <BarChart 
-                                  data={apptStats.map(i => i.newPatients)} 
-                                  labels={apptStats.map(i => i.month)} 
-                                  color={CHART_COLORS.secondary}
-                                  height={200}
-                                />
-                              </Box>
-                            </CardBody>
-                          </Card>
-
-                          {/* 饼图 - 患者性别分布 */}
-                          <Card 
-                            background="white" 
-                            elevation="small" 
-                            className="fade-in-up"
-                            flex={isSmall ? false : true}
-                          >
-                            <CardHeader 
-                              pad={{ horizontal: "small", vertical: "xsmall" }} 
-                              border={{ side: "bottom", color: "light-2" }}
-                            >
-                              <Text weight="bold" size="medium" style={{ fontSize: '14px' }}>患者性别分布</Text>
-                            </CardHeader>
-                            <CardBody pad={{ 
-                              horizontal: isSmall ? 'xsmall' : 'small', 
-                              vertical: 'small'
-                            }}>
-                              <PieChart 
-                                data={genderStats.map(i => i.value)} 
-                                labels={genderStats.map(i => i.gender)}
-                                colors={[CHART_COLORS.primary, CHART_COLORS.secondary, CHART_COLORS.tertiary]}
-                              />
-                            </CardBody>
-                          </Card>
-
-                        </Box>
-
+                          </>
+                        )}
                       </Box>
                     )}
                   </Box>
