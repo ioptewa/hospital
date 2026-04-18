@@ -13,612 +13,196 @@ import {
 import { FormPreviousLink } from 'grommet-icons';
 
 // ==========================================
-// 1. 样式与动画定义
+// 1. 全域工業風黑白主題
 // ==========================================
 const theme = {
   global: {
     colors: {
       brand: '#000000',
-      focus: '#000000',
+      control: '#000000',
+      focus: 'transparent',
       "neutral-gray": "#cccccc",
-      "light-background": "#f8f9fa",
-      "chart-line": "#2563eb",
-      "chart-bar": "#10b981"
+      background: "#ffffff",
+      text: "#000000",
     },
     font: {
-      family: 'Lato, sans-serif',
-      size: {
-        xsmall: '11px',
-        small: '12px',
-        medium: '14px',
-        large: '16px',
-        xlarge: '18px'
-      }
+      family: '"Lato", "Helvetica Neue", "Microsoft JhengHei", sans-serif',
     },
   },
   card: {
-    elevation: "small",
     container: {
-      round: "small"
+      round: "none",
+      elevation: "none"
     }
   }
 };
 
 const CHART_COLORS = {
-  primary: "#2563eb",   // 蓝色
-  secondary: "#10b981", // 绿色
-  tertiary: "#8b5cf6",  // 紫色
-  grid: "#e2e8f0",
-  text: "#64748b"
+  primary: "#000000",
+  secondary: "#666666",
+  tertiary: "#999999",
+  grid: "#eeeeee"
 };
 
-// 注入动态 CSS 动画
+// CSS 動畫與全局樣式
 const AnimationStyles = () => (
   <style>{`
-    @keyframes drawLine {
-      from { stroke-dashoffset: 1000; }
-      to { stroke-dashoffset: 0; }
+    @keyframes growBar { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes drawLine { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+
+    .chart-bar { 
+      transform-origin: bottom; 
+      animation: growBar 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
     }
-    @keyframes growBar {
-      from { transform: scaleY(0); }
-      to { transform: scaleY(1); }
+    .chart-line-path { 
+      stroke-dasharray: 1000; 
+      stroke-dashoffset: 1000; 
+      animation: drawLine 1.5s ease-out forwards; 
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .chart-line-path {
-      stroke-dasharray: 1000;
-      stroke-dashoffset: 1000;
-      animation: drawLine 2s ease-out forwards;
-    }
-    .chart-bar {
-      transform-origin: bottom;
-      animation: growBar 1s ease-out forwards;
-    }
-    .chart-point:hover {
-      r: 6;
-      stroke-width: 3;
-      cursor: pointer;
-    }
-    .fade-in-up {
-      animation: fadeIn 0.8s ease-out forwards;
-    }
-    /* 紧凑卡片样式 */
-    .compact-card {
-      padding: 10px 12px !important;
-      min-height: 70px !important;
-    }
-    .compact-card h2 {
-      font-size: 1.4rem !important;
-      margin: 2px 0 !important;
-    }
-    .compact-card p {
-      margin: 1px 0 !important;
-      font-size: 10px !important;
-    }
-    /* 图表容器 */
-    .chart-container {
-      min-width: 0; /* 防止flex溢出 */
-    }
-    /* 优化条形图悬停效果 */
-    .bar-hover:hover {
-      opacity: 0.8;
-      transform: translateY(-2px);
-      transition: all 0.2s ease;
-    }
-    /* 饼图悬停效果 */
-    .pie-segment:hover {
-      filter: brightness(1.1);
-      transform: scale(1.02);
-      transform-origin: center;
-      transition: all 0.3s ease;
-    }
+    .fade-in-up { animation: fadeIn 0.6s ease-out forwards; }
+    
+    /* 禁止圖表標籤換行 */
+    .no-wrap { white-space: nowrap; }
   `}</style>
 );
 
 // ==========================================
-// 2. 图表组件 (保持不变)
+// 2. 數據統計子組件
 // ==========================================
 
-const CompactStatCard = ({ title, value, subtitle, color = "brand" }) => (
-  <Card background="white" pad="xsmall" elevation="small" className="fade-in-up compact-card" justify="center">
-    <Box>
-      <Text size="xsmall" color="dark-4" weight="bold" style={{ fontSize: '10px' }}>{title}</Text>
-      <Heading level="2" margin={{ vertical: "xxsmall" }} color={color} style={{ fontSize: '1.4rem', lineHeight: '1.2' }}>{value}</Heading>
-      <Text size="xsmall" color="dark-5" style={{ fontSize: '9px' }}>{subtitle}</Text>
-    </Box>
-  </Card>
+// 統計卡片
+const StatCard = ({ title, value, subtitle }) => (
+  <Box 
+    flex={false}
+    background="white" 
+    pad="medium" 
+    border={{ color: 'black', size: 'medium' }} 
+    className="fade-in-up"
+    style={{ minWidth: '180px' }}
+  >
+    <Text size="small" weight="bold" color="dark-4">{title}</Text>
+    <Heading level="1" margin={{ vertical: "xsmall" }} style={{ fontWeight: 900, fontSize: '2.5rem' }}>
+      {value}
+    </Heading>
+    <Text size="xsmall" color="dark-4" weight="bold">{subtitle}</Text>
+  </Box>
 );
 
-const BarChart = ({ data, labels, height = 200, color = CHART_COLORS.primary }) => {
-  if (!data || data.length === 0) return <Box pad="medium"><Text>暂无数据</Text></Box>;
+// 修復後的柱狀圖
+const BarChart = ({ data, labels, height = 220 }) => {
+  if (!data || data.length === 0) return <Box pad="medium" align="center"><Text>暫無數據</Text></Box>;
   
-  const maxValue = Math.max(...data, 1) * 1.3;
+  const numericData = data.map(v => Number(v) || 0);
+  const maxValue = Math.max(...numericData, 1) * 1.2;
 
   return (
-    <ResponsiveContext.Consumer>
-      {size => {
-        const isSmall = size === 'small';
-        return (
-          <Box height={`${height}px`} pad={{ bottom: "xsmall" }} justify="end" className="chart-container">
-            <Box style={{ position: 'absolute', left: 0, top: 0, bottom: 25, width: 30 }}>
-              {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
-                const value = Math.round(maxValue * ratio);
-                return (
-                  <Box
-                    key={index}
-                    style={{
-                      position: 'absolute',
-                      bottom: `${ratio * 100}%`,
-                      left: 0,
-                      width: '100%',
-                      textAlign: 'right'
-                    }}
-                  >
-                    <Text size="xsmall" color="dark-4" style={{ fontSize: '9px' }}>{value}</Text>
-                  </Box>
-                );
-              })}
+    <Box height={`${height}px`} flex={false} justify="end">
+      <Box 
+        direction="row" 
+        align="end" 
+        justify="between" 
+        height="180px"  // 固定繪圖區高度
+        border={{ side: 'bottom', color: 'black', size: 'small' }}
+      >
+        {numericData.map((value, index) => {
+          // 強制計算高度像素值，防止塌陷
+          const calculatedHeight = (value / maxValue) * 180;
+          return (
+            <Box key={index} align="center" justify="end" flex="grow" style={{ height: '100%' }}>
+              <Text size="xsmall" weight="bold" margin={{ bottom: "xsmall" }}>{value}</Text>
+              <Box 
+                className="chart-bar" 
+                background={index % 2 === 0 ? "black" : "#666"}
+                width="70%" 
+                maxWidth="40px"
+                style={{ 
+                  height: `${calculatedHeight}px`, 
+                  animationDelay: `${index * 0.05}s` 
+                }}
+              />
             </Box>
-            
-            <Box 
-              direction="row" 
-              align="end" 
-              justify="between" 
-              height="100%" 
-              border={{ side: 'bottom', color: CHART_COLORS.grid }}
-              pad={{ left: '30px' }}
-            >
-              {data.map((value, index) => {
-                const heightPercent = Math.max((value / maxValue) * 100, 1);
-                
-                return (
-                  <Box 
-                    key={index} 
-                    align="center" 
-                    justify="end" 
-                    flex="grow" 
-                    margin={{ horizontal: "xxsmall" }}
-                    style={{ position: 'relative', height: '100%' }}
-                  >
-                    <Box 
-                      className="chart-bar bar-hover" 
-                      background={color}
-                      width={isSmall ? '70%' : '75%'} 
-                      maxWidth="40px"
-                      height={`${heightPercent}%`}
-                      round={{ corner: "top", size: "xsmall" }}
-                      style={{ 
-                        minHeight: "3px",
-                        animationDelay: `${index * 0.1}s`,
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => {
-                        const tooltip = e.currentTarget.parentNode.querySelector('.value-tooltip');
-                        if (tooltip) tooltip.style.opacity = 1;
-                      }}
-                      onMouseLeave={(e) => {
-                        const tooltip = e.currentTarget.parentNode.querySelector('.value-tooltip');
-                        if (tooltip) tooltip.style.opacity = 0;
-                      }}
-                    />
-                    
-                    <Box
-                      className="value-tooltip"
-                      style={{
-                        position: 'absolute',
-                        top: `${100 - heightPercent - 10}%`,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: 'rgba(0,0,0,0.8)',
-                        color: 'white',
-                        padding: '2px 6px',
-                        borderRadius: '3px',
-                        fontSize: '10px',
-                        opacity: 0,
-                        transition: 'opacity 0.2s',
-                        pointerEvents: 'none',
-                        whiteSpace: 'nowrap',
-                        zIndex: 10
-                      }}
-                    >
-                      {value} 人
-                    </Box>
-                    
-                    <Text 
-                      size="xsmall" 
-                      weight="bold" 
-                      margin={{ top: "xxsmall" }} 
-                      style={{ 
-                        fontSize: '10px',
-                        color: value === Math.max(...data) ? color : 'inherit'
-                      }}
-                    >
-                      {value}
-                    </Text>
-                  </Box>
-                );
-              })}
-            </Box>
-            
-            <Box 
-              direction="row" 
-              justify="between" 
-              margin={{ top: "xxsmall", left: '30px' }}
-            >
-              {labels.map((label, i) => (
-                  <Box 
-                    key={i} 
-                    align="center" 
-                    flex="grow"
-                    pad={{ horizontal: 'xxsmall' }}
-                  >
-                    <Text 
-                      size="xsmall" 
-                      color={CHART_COLORS.text} 
-                      style={{ 
-                        fontSize: '9px',
-                        fontWeight: data[i] === Math.max(...data) ? 'bold' : 'normal'
-                      }}
-                    >
-                      {label}
-                    </Text>
-                  </Box>
-              ))}
-            </Box>
+          );
+        })}
+      </Box>
+      <Box direction="row" justify="between" margin={{ top: "xsmall" }}>
+        {labels.map((label, i) => (
+          <Box key={i} align="center" flex="grow">
+            <Text size="xsmall" weight="bold" className="no-wrap">{label}</Text>
           </Box>
-        );
-      }}
-    </ResponsiveContext.Consumer>
+        ))}
+      </Box>
+    </Box>
   );
 };
 
-const LineChart = ({ data, labels, height = 220 }) => {
-  if (!data || data.length === 0)
-    return (
-      <Box pad="medium">
-        <Text>暂无数据</Text>
-      </Box>
-    );
-
+// 趨勢折線圖
+const LineChart = ({ data, labels, height = 240 }) => {
+  if (!data || data.length === 0) return null;
   const svgWidth = 800;
   const svgHeight = height;
-  const padding = { left: 40, right: 40, top: 20, bottom: 40 };
+  const padding = { left: 40, right: 40, top: 30, bottom: 40 };
+  const maxValue = Math.max(...data, 1) * 1.2;
 
-  const maxValue = Math.max(...data) * 1.2;
-  const minValue = 0;
-
-  const getX = (index) => {
-    return padding.left + (index / (data.length - 1)) * (svgWidth - padding.left - padding.right);
-  };
-
-  const getY = (value) => {
-    return (
-      svgHeight -
-      padding.bottom -
-      ((value - minValue) / (maxValue - minValue)) * (svgHeight - padding.top - padding.bottom)
-    );
-  };
-
-  const points = data.map((v, i) => ({ x: getX(i), y: getY(v), value: v }));
-
-  const generateBezierPath = () => {
-    if (points.length < 2) return "";
-    let d = `M ${points[0].x},${points[0].y}`;
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[i];
-      const p1 = points[i + 1];
-      const c1 = { x: (p0.x + p1.x) / 2, y: p0.y };
-      const c2 = { x: (p0.x + p1.x) / 2, y: p1.y };
-      d += ` C ${c1.x},${c1.y} ${c2.x},${c2.y} ${p1.x},${p1.y}`;
-    }
-    return d;
-  };
-
-  const yTicks = [0, maxValue * 0.25, maxValue * 0.5, maxValue * 0.75, maxValue];
+  const getX = (i) => padding.left + (i / (data.length - 1)) * (svgWidth - padding.left - padding.right);
+  const getY = (v) => svgHeight - padding.bottom - (v / maxValue) * (svgHeight - padding.top - padding.bottom);
+  
+  const points = data.map((v, i) => ({ x: getX(i), y: getY(v) }));
+  const d = `M ${points.map(p => `${p.x},${p.y}`).join(' L ')}`;
 
   return (
-    <Box height={`${height}px`} style={{ position: "relative" }} className="chart-container">
-      <svg
-        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-        style={{
-          width: "100%",
-          height: "100%",
-          overflow: "visible",
-        }}
-      >
-        {yTicks.map((value, i) => {
-          const y = getY(value);
-          return (
-            <g key={`y-label-${i}`}>
-              <text
-                x={padding.left - 10}
-                y={y + 3}
-                textAnchor="end"
-                fontSize="10"
-                fill="#64748b"
-                fontFamily="Lato, sans-serif"
-              >
-                {Math.round(value)}
-              </text>
-            </g>
-          );
-        })}
-
-        {yTicks.map((_, i) => {
-          const y = getY(yTicks[i]);
-          return (
-            <g key={`grid-${i}`}>
-              <line
-                x1={padding.left}
-                y1={y}
-                x2={svgWidth - padding.right}
-                y2={y}
-                stroke="#e2e8f0"
-                strokeDasharray="4,4"
-              />
-            </g>
-          );
-        })}
-
-        <defs>
-          <linearGradient id="gradientArea" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor={CHART_COLORS.primary} stopOpacity="0.2" />
-            <stop offset="100%" stopColor={CHART_COLORS.primary} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        <path
-          d={`${generateBezierPath()} L ${points[points.length - 1].x},${svgHeight - padding.bottom} L ${
-            points[0].x
-          },${svgHeight - padding.bottom} Z`}
-          fill="url(#gradientArea)"
-          className="fade-in-up"
-        />
-
-        <path
-          d={generateBezierPath()}
-          fill="none"
-          stroke={CHART_COLORS.primary}
-          strokeWidth="2"
-          strokeLinecap="round"
-          className="chart-line-path"
-        />
-
+    <Box height={`${height}px`} flex={false}>
+      <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+        <path d={d} fill="none" stroke="black" strokeWidth="4" className="chart-line-path" />
         {points.map((p, i) => (
-          <g key={`point-${i}`}>
-            <circle
-              cx={p.x}
-              cy={p.y}
-              r="3"
-              fill="white"
-              stroke={CHART_COLORS.primary}
-              strokeWidth="2"
-              className="chart-point"
-              style={{ transition: "all 0.2s ease" }}
-            >
-              <title>{p.value} 人</title>
-            </circle>
-
-            <text
-              x={p.x}
-              y={p.y - 10}
-              textAnchor="middle"
-              fontSize="10"
-              fill="#2563eb"
-              fontWeight="bold"
-              style={{ pointerEvents: "none" }}
-            >
-              {p.value}
-            </text>
+          <g key={i}>
+            <circle cx={p.x} cy={p.y} r="5" fill="black" />
+            <text x={p.x} y={p.y - 15} textAnchor="middle" fontSize="14" fontWeight="bold">{data[i]}</text>
+            <text x={p.x} y={svgHeight - 10} textAnchor="middle" fontSize="12" fontWeight="bold">{labels[i]}</text>
           </g>
         ))}
-
-        {points.map((p, i) => (
-          <text
-            key={`x-label-${i}`}
-            x={p.x}
-            y={svgHeight - 5}
-            textAnchor="middle"
-            fontSize="10"
-            fill="#64748b"
-            fontFamily="Lato, sans-serif"
-            style={{ whiteSpace: "nowrap" }}
-          >
-            {labels[i]}
-          </text>
-        ))}
+        <line x1={padding.left} y1={svgHeight - padding.bottom} x2={svgWidth - padding.right} y2={svgHeight - padding.bottom} stroke="black" strokeWidth="2" />
       </svg>
     </Box>
   );
 };
 
-const PieChart = ({ data, labels, colors }) => {
-    const total = data.reduce((sum, value) => sum + value, 0) || 1;
-    let currentAngle = 0;
-    
-    const segments = data.map((value, index) => {
-      const angle = (value / total) * 360;
-      const largeArcFlag = angle > 180 ? 1 : 0;
-      const radius = 40;
-      const startX = 50 + radius * Math.cos(currentAngle * Math.PI / 180);
-      const startY = 50 + radius * Math.sin(currentAngle * Math.PI / 180);
-      const endAngle = currentAngle + angle;
-      const endX = 50 + radius * Math.cos(endAngle * Math.PI / 180);
-      const endY = 50 + radius * Math.sin(endAngle * Math.PI / 180);
-      const path = `M 50 50 L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY} Z`;
-      currentAngle = endAngle;
-      return { 
-        path, 
-        color: colors[index % colors.length], 
-        label: labels[index], 
-        value, 
-        percentage: ((value/total)*100).toFixed(1),
-        startAngle: currentAngle - angle,
-        endAngle: currentAngle
-      };
-    });
-  
-    return (
-      <ResponsiveContext.Consumer>
-        {size => {
-          const isSmall = size === 'small';
-          return (
-            <Box 
-              direction={isSmall ? 'column' : 'row'} 
-              align="center" 
-              justify="center" 
-              gap={isSmall ? 'small' : 'medium'} 
-              wrap={isSmall ? true : false}
-              className="fade-in-up chart-container"
-            >
-              <Box 
-                width={isSmall ? '180px' : '200px'} 
-                height={isSmall ? '180px' : '200px'}
-                flex={false}
-                align="center"
-                justify="center"
-              >
-                <svg 
-                  viewBox="0 0 100 100" 
-                  style={{ 
-                    width: '100%', 
-                    height: '100%',
-                    transform: 'rotate(-90deg)'
-                  }}
-                >
-                  <text
-                    x="50"
-                    y="50"
-                    textAnchor="middle"
-                    fontSize="8"
-                    fill="#64748b"
-                    fontFamily="Lato, sans-serif"
-                  >
-                    总计
-                  </text>
-                  <text
-                    x="50"
-                    y="58"
-                    textAnchor="middle"
-                    fontSize="12"
-                    fill="#000000"
-                    fontWeight="bold"
-                    fontFamily="Lato, sans-serif"
-                  >
-                    {total}
-                  </text>
-                  
-                  {segments.map((s, i) => (
-                    <path 
-                      key={i} 
-                      d={s.path} 
-                      fill={s.color} 
-                      stroke="white" 
-                      strokeWidth="2"
-                      className="pie-segment"
-                      style={{ 
-                        transition: "all 0.3s",
-                        cursor: "pointer"
-                      }}
-                      onMouseOver={(e) => {
-                        e.target.style.opacity = 0.9;
-                      }}
-                      onMouseOut={(e) => {
-                        e.target.style.opacity = 1;
-                      }}
-                    />
-                  ))}
-                </svg>
-              </Box>
-              
-              <Box 
-                flex={false} 
-                align={isSmall ? 'center' : 'start'}
-                width={isSmall ? '100%' : 'auto'}
-              >
-                <Box 
-                  background="light-2" 
-                  pad="xsmall" 
-                  round="xsmall" 
-                  margin={{ bottom: 'xsmall' }}
-                  width={isSmall ? '100%' : 'auto'}
-                >
-                  <Text 
-                    size="xsmall" 
-                    color="dark-4" 
-                    weight="bold"
-                    style={{ fontSize: '10px' }}
-                  >
-                    详细分布
-                  </Text>
-                </Box>
-                
-                {segments.map((s, i) => (
-                  <Box 
-                    key={i} 
-                    direction="row" 
-                    align="center" 
-                    gap="small" 
-                    margin={{ bottom: "xxsmall" }}
-                    width={isSmall ? '100%' : 'auto'}
-                    justify={isSmall ? 'between' : 'start'}
-                    pad={{ horizontal: 'xsmall' }}
-                  >
-                    <Box direction="row" align="center" gap="xsmall">
-                      <Box 
-                        width="12px" 
-                        height="12px" 
-                        background={s.color} 
-                        round="xs" 
-                      />
-                      <Text 
-                        size="small" 
-                        weight="bold" 
-                        style={{ 
-                          fontSize: isSmall ? '12px' : '13px',
-                          minWidth: isSmall ? '30px' : 'auto'
-                        }}
-                      >
-                        {s.label}
-                      </Text>
-                    </Box>
-                    <Box direction="row" gap="xsmall" align="center">
-                      <Text 
-                        size="small" 
-                        weight="bold" 
-                        color="dark-6"
-                        style={{ fontSize: isSmall ? '11px' : '12px' }}
-                      >
-                        {s.value}
-                      </Text>
-                      <Text 
-                        size="small" 
-                        color="dark-4" 
-                        style={{ 
-                          fontSize: isSmall ? '10px' : '11px',
-                          minWidth: '45px'
-                        }}
-                      >
-                        ({s.percentage}%)
-                      </Text>
-                    </Box>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          );
-        }}
-      </ResponsiveContext.Consumer>
-    );
-  };
+// 性別分佈餅圖
+const PieChart = ({ data, labels }) => {
+  const total = data.reduce((sum, v) => sum + v, 0) || 1;
+  const colors = ["#000000", "#666666", "#cccccc"];
+  let currentAngle = 0;
+
+  return (
+    <Box direction="row-responsive" align="center" justify="center" gap="xlarge" flex={false}>
+      <svg viewBox="0 0 100 100" style={{ width: '160px', height: '160px', transform: 'rotate(-90deg)' }}>
+        {data.map((value, i) => {
+          const angle = (value / total) * 360;
+          const x1 = 50 + 45 * Math.cos(currentAngle * Math.PI / 180);
+          const y1 = 50 + 45 * Math.sin(currentAngle * Math.PI / 180);
+          currentAngle += angle;
+          const x2 = 50 + 45 * Math.cos(currentAngle * Math.PI / 180);
+          const y2 = 50 + 45 * Math.sin(currentAngle * Math.PI / 180);
+          const pathData = `M 50 50 L ${x1} ${y1} A 45 45 0 ${angle > 180 ? 1 : 0} 1 ${x2} ${y2} Z`;
+          return <path key={i} d={pathData} fill={colors[i % 3]} stroke="white" strokeWidth="1" />;
+        })}
+      </svg>
+      <Box gap="small">
+        {labels.map((l, i) => (
+          <Box key={i} direction="row" align="center" gap="small">
+            <Box width="14px" height="14px" background={colors[i % 3]} border={{ color: 'black' }} />
+            <Text weight="bold" size="medium">{l}: {data[i]} 人 ({((data[i]/total)*100).toFixed(1)}%)</Text>
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
 
 // ==========================================
-// 3. 主页面逻辑 (核心修改区域)
+// 3. 主頁面組件
 // ==========================================
 export default class DocStatistics extends Component {
-  // 1. 初始化 State
   state = {
     loading: true,
     apptStats: [],
@@ -626,19 +210,13 @@ export default class DocStatistics extends Component {
   };
 
   componentDidMount() {
-    // 2. 组件加载后请求真实数据
     this.fetchStatistics();
   }
 
   fetchStatistics = () => {
-    // 假设后端运行在 localhost:3001
     fetch('http://localhost:3001/doctorStatistics')
+      .then(res => res.json())
       .then(res => {
-        if (!res.ok) throw new Error("Network response was not ok");
-        return res.json();
-      })
-      .then(res => {
-        // 更新 State，后端已经过滤了脏数据
         this.setState({ 
           apptStats: res.apptStats || [], 
           genderStats: res.genderStats || [],
@@ -646,212 +224,111 @@ export default class DocStatistics extends Component {
         });
       })
       .catch(err => {
-        console.error("Error fetching statistics:", err);
-        // 出错也停止 loading，以免界面卡死
+        console.error("Fetch Error:", err);
         this.setState({ loading: false });
       });
   }
 
   render() {
-    // 3. 从 State 获取数据，不再使用 mockData
     const { loading, apptStats, genderStats } = this.state;
     
-    // 计算统计概览
-    const totalAppointments = apptStats.reduce((sum, item) => sum + item.count, 0);
-    const totalNewPatients = apptStats.reduce((sum, item) => sum + item.newPatients, 0);
-    const avgAppointments = apptStats.length > 0 
-        ? Math.round(totalAppointments / apptStats.length) 
-        : 0;
+    // 預算邏輯
+    const totalAppts = apptStats.reduce((s, i) => s + i.count, 0);
+    const totalNew = apptStats.reduce((s, i) => s + i.newPatients, 0);
+    const avgLoad = apptStats.length > 0 ? Math.round(totalAppts / apptStats.length) : 0;
 
     return (
       <Grommet theme={theme} full>
         <AnimationStyles />
-        
-        <Box fill background="light-background">
-          {/* 1. 顶部栏 */}
+        <Box fill background="#f7f7f7" overflow={{ vertical: 'auto' }}>
+          
+          {/* 頂部欄 */}
           <Box 
-            tag='header'
-            direction='row'
-            align='center'
-            background='brand'
-            pad={{ left: 'medium', right: 'medium', vertical: 'xsmall' }}
-            elevation="small"
-            style={{ zIndex: '10' }}
-            flex={false} 
+            tag='header' flex={false} direction='row' align='center' 
+            background='black' pad={{ horizontal: 'medium', vertical: 'small' }}
+            elevation="none"
           >
-            <Button 
-                icon={<FormPreviousLink color="white" />} 
-                label={<Text color="white"></Text>}
-                href="/DocHome" 
-                plain
-                hoverIndicator={{ color: "#333" }}
-            />
-            <Heading level='4' margin='none' color="white" style={{ fontSize: '1.2rem' }}>数据统计中心</Heading>
+            <Button icon={<FormPreviousLink color="white" />} href="/DocHome" plain />
+            <Heading level='3' margin='none' color="white" style={{ fontWeight: 800, letterSpacing: '1px' }}>
+              數據統計中心 / STATISTICS CENTER
+            </Heading>
           </Box>
 
-          {/* 2. 主内容区域 */}
-          <ResponsiveContext.Consumer>
-            {size => {
-              const isSmall = size === 'small';
-              return (
-                <Box 
-                  flex 
-                  pad={{ 
-                    horizontal: isSmall ? 'xsmall' : 'small',
-                    vertical: 'xsmall'
-                  }} 
-                  overflow={{ vertical: "auto", horizontal: "hidden" }} 
-                >
-                  <Box 
-                    width="100%" 
-                    gap="xsmall"
-                    margin="auto"
-                    style={{ maxWidth: '1200px' }}
-                  > 
+          {/* 內容容器 */}
+          <Box flex={false} align="center" pad={{ vertical: 'large', horizontal: 'medium' }}>
+            <Box width="xlarge" direction="column" gap="medium">
+              
+              {/* 報表標題 */}
+              <Box flex={false} border={{ side: 'bottom', color: 'black', size: 'medium' }} pad={{ bottom: 'small' }}>
+                <Heading level="2" margin="none" style={{ fontWeight: 900 }}>醫院營運數據概覽</Heading>
+                <Text weight="bold" size="small" color="dark-4">HOSPITAL OPERATIONAL PERFORMANCE REPORT</Text>
+              </Box>
+
+              {/* 核心指標卡片 */}
+              <Box direction="row-responsive" gap="medium" flex={false}>
+                <Box flex><StatCard title="總預約次數" value={totalAppts} subtitle="過去 12 個月累計數據" /></Box>
+                <Box flex><StatCard title="新增病患人數" value={totalNew} subtitle="系統新建立檔案總數" /></Box>
+                <Box flex><StatCard title="月均接診量" value={avgLoad} subtitle="預計醫師平均工作負荷" /></Box>
+              </Box>
+
+              {loading ? (
+                <Box align="center" pad="large" flex={false}><Text weight="bold">數據加載中，請稍候...</Text></Box>
+              ) : (
+                <Box gap="medium" flex={false} direction="column">
+                  
+                  {/* 折線圖卡片 */}
+                  <Card background="white" border={{ color: 'black', size: 'medium' }} flex={false}>
+                    <CardHeader pad="medium" border={{ side: 'bottom', color: 'black', size: 'small' }} background="#fafafa">
+                      <Text weight="bold">每月預約趨勢分析 (單位：人次)</Text>
+                    </CardHeader>
+                    <CardBody pad="xlarge" background="white">
+                      <LineChart data={apptStats.map(i => i.count)} labels={apptStats.map(i => i.month)} />
+                    </CardBody>
+                  </Card>
+
+                  {/* 下方分欄圖表 */}
+                  <Box direction="row-responsive" gap="medium" flex={false}>
                     
-                    <Box margin={{ bottom: "xxsmall" }} className="fade-in-up">
-                      <Heading level="3" margin="none" style={{ fontSize: '1.3rem' }}>医院运营概览</Heading>
-                      <Text color="dark-4" size="small" style={{ fontSize: '11px' }}>实时更新的诊疗数据与趋势分析</Text>
-                    </Box>
-
-                    {/* 超紧凑统计卡片 */}
-                    <Box 
-                      direction="row" 
-                      gap="xsmall" 
-                      margin={{ bottom: "small" }}
-                      wrap={true}
-                      justify="between"
-                    >
-                      <Box flex basis="32%" style={{ minWidth: '100px' }}>
-                        <CompactStatCard 
-                          title="总预约数" 
-                          value={totalAppointments} 
-                          subtitle="近12个月累计" 
+                    {/* 柱狀圖：新增病患 */}
+                    <Card flex background="white" border={{ color: 'black', size: 'medium' }}>
+                      <CardHeader pad="medium" border={{ side: 'bottom', color: 'black', size: 'small' }} background="#fafafa">
+                        <Text weight="bold">新增病患月度統計</Text>
+                      </CardHeader>
+                      <CardBody pad="medium" justify="center" height="300px">
+                        <BarChart 
+                          data={apptStats.map(i => i.newPatients)} 
+                          labels={apptStats.map(i => i.month)} 
                         />
-                      </Box>
-                      <Box flex basis="32%" style={{ minWidth: '100px' }}>
-                        <CompactStatCard 
-                          title="新增患者" 
-                          value={totalNewPatients} 
-                          subtitle="新增档案数"
-                          color={CHART_COLORS.secondary}
+                      </CardBody>
+                    </Card>
+
+                    {/* 餅圖：性別分佈 */}
+                    <Card flex background="white" border={{ color: 'black', size: 'medium' }}>
+                      <CardHeader pad="medium" border={{ side: 'bottom', color: 'black', size: 'small' }} background="#fafafa">
+                        <Text weight="bold">病患性別分佈比例</Text>
+                      </CardHeader>
+                      <CardBody pad="medium" justify="center" height="300px">
+                        <PieChart 
+                          data={genderStats.map(i => i.value)} 
+                          labels={genderStats.map(i => i.gender)}
                         />
-                      </Box>
-                      <Box flex basis="32%" style={{ minWidth: '100px' }}>
-                        <CompactStatCard 
-                          title="月均接诊" 
-                          value={avgAppointments} 
-                          subtitle="平均工作负荷"
-                          color={CHART_COLORS.tertiary}
-                        />
-                      </Box>
-                    </Box>
+                      </CardBody>
+                    </Card>
 
-                    {loading ? (
-                        <Box align="center" justify="center" height="medium">
-                          <Text>数据加载中...</Text>
-                        </Box>
-                    ) : (
-                      <Box gap="small">
-                        {/* 如果没有数据时的处理 */}
-                        {apptStats.length === 0 && genderStats.length === 0 ? (
-                            <Box pad="large" align="center" justify="center">
-                                <Text color="dark-4">暂无统计数据，请等待产生诊疗记录。</Text>
-                            </Box>
-                        ) : (
-                          <>
-                            {/* 折线图 - 预约趋势 */}
-                            <Card background="white" elevation="small" className="fade-in-up">
-                              <CardHeader 
-                                pad={{ horizontal: "small", vertical: "xsmall" }} 
-                                border={{ side: "bottom", color: "light-2" }}
-                              >
-                                <Box>
-                                  <Text weight="bold" size="medium" style={{ fontSize: '14px' }}>每月预约趋势</Text>
-                                  <Text size="xsmall" color="dark-4" style={{ fontSize: '10px' }}>过去12个月的接诊量变化 (单位: 人)</Text>
-                                </Box>
-                              </CardHeader>
-                              <CardBody 
-                                pad={{ horizontal: "xsmall", vertical: "xsmall" }}
-                                style={{ overflow: 'visible' }}
-                              >
-                                <Box style={{ minHeight: '240px', overflow: 'visible' }}>
-                                  <LineChart 
-                                    data={apptStats.map(i => i.count)} 
-                                    labels={apptStats.map(i => i.month)} 
-                                    height={200}
-                                  />
-                                </Box>
-                              </CardBody>
-                            </Card>
-
-                            {/* 两个小图表并排 */}
-                            <Box direction={isSmall ? 'column' : 'row'} gap="small">
-                              
-                              {/* 柱状图 - 新增患者 */}
-                              <Card 
-                                background="white" 
-                                elevation="small" 
-                                className="fade-in-up"
-                                flex={isSmall ? false : true}
-                              >
-                                <CardHeader 
-                                  pad={{ horizontal: "small", vertical: "xsmall" }} 
-                                  border={{ side: "bottom", color: "light-2" }}
-                                >
-                                  <Box>
-                                    <Text weight="bold" size="medium" style={{ fontSize: '14px' }}>新增患者统计</Text>
-                                    <Text size="xsmall" color="dark-4" style={{ fontSize: '10px' }}>按月统计的新建档案数量</Text>
-                                  </Box>
-                                </CardHeader>
-                                <CardBody pad={{ horizontal: "xsmall", vertical: "xsmall" }}>
-                                  <Box style={{ position: 'relative', height: '220px' }}>
-                                    <BarChart 
-                                      data={apptStats.map(i => i.newPatients)} 
-                                      labels={apptStats.map(i => i.month)} 
-                                      color={CHART_COLORS.secondary}
-                                      height={200}
-                                    />
-                                  </Box>
-                                </CardBody>
-                              </Card>
-
-                              {/* 饼图 - 患者性别分布 */}
-                              <Card 
-                                background="white" 
-                                elevation="small" 
-                                className="fade-in-up"
-                                flex={isSmall ? false : true}
-                              >
-                                <CardHeader 
-                                  pad={{ horizontal: "small", vertical: "xsmall" }} 
-                                  border={{ side: "bottom", color: "light-2" }}
-                                >
-                                  <Text weight="bold" size="medium" style={{ fontSize: '14px' }}>患者性别分布</Text>
-                                </CardHeader>
-                                <CardBody pad={{ 
-                                  horizontal: isSmall ? 'xsmall' : 'small', 
-                                  vertical: 'small'
-                                }}>
-                                  <PieChart 
-                                    data={genderStats.map(i => i.value)} 
-                                    labels={genderStats.map(i => i.gender)}
-                                    // 确保颜色足够循环
-                                    colors={[CHART_COLORS.primary, CHART_COLORS.secondary, CHART_COLORS.tertiary]}
-                                  />
-                                </CardBody>
-                              </Card>
-
-                            </Box>
-                          </>
-                        )}
-                      </Box>
-                    )}
                   </Box>
                 </Box>
-              );
-            }}
-          </ResponsiveContext.Consumer>
+              )}
+
+              {/* 頁腳 */}
+              <Box align="center" margin={{ top: 'xlarge' }} flex={false}>
+                <Box border={{ side: 'top', color: 'black', size: 'small' }} width="small" margin={{ bottom: 'small' }} />
+                <Text size="small" weight="bold" color="dark-3">
+                  © HOSPITAL MANAGEMENT SYSTEM | AUTHORIZED DATA ACCESS ONLY
+                </Text>
+              </Box>
+              
+            </Box>
+          </Box>
         </Box>
       </Grommet>
     );

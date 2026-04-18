@@ -1,162 +1,227 @@
-import React, { Component} from 'react';
-
+import React, { Component } from 'react';
 import {
-    Box,
-    Button,
-    Heading,
-    Grommet,
-    FormField,
-    Form,
-    Text,
-    TextInput
+  Box,
+  Button,
+  Heading,
+  Grommet,
+  Form,
+  Text,
+  TextInput,
+  Main,
 } from 'grommet';
+import { Search, View, FormPreviousLink } from 'grommet-icons';
 
-// 假设 App.css 提供了基础样式，但我们主要使用 Grommet 替代
-import './App.css'; 
+// --- 專業黑白風格 InfoItem ---
+const InfoItem = ({ label, value }) => (
+  <Box direction="column" flex={false}>
+    <Text size="xsmall" weight="bold" color="dark-4" style={{ letterSpacing: '1px' }}>
+      {label}
+    </Text>
+    <Text size="medium" margin={{ top: '1px' }} weight={500}>
+      {value || '—'}
+    </Text>
+  </Box>
+);
 
 const theme = {
-    global: {
-      colors: {
-        brand: '#000000',
-        focus: '#000000',
-        background: '#F8F9FA'
-      },
-      font: {
-        family: 'Lato',
-      },
+  global: {
+    colors: {
+      brand: '#000000',
+      background: '#ffffff',
+      border: '#000000',
+      focus: 'transparent', // 移除點選時的藍色邊框
+      text: { light: '#000000' },
     },
-  };
-  
+    font: {
+      family: 'sans-serif',
+      size: '14px',
+    },
+  },
+  button: { 
+    border: { radius: "0px" },
+    primary: {
+      color: "#ffffff",
+      background: "#000000"
+    }
+  }
+};
+
 export class ViewMedHist extends Component {
-    
-    // 状态用于存储病历历史列表
-    state = { medhiststate: [] }
+  state = { medhiststate: [], loading: false };
 
-    componentDidMount() {
-        // 初始加载时获取所有患者
-        this.getNames("");
-    }
+  componentDidMount() {
+    this.getNames("");
+  }
 
-    // 获取患者姓名的函数，支持按姓名搜索
-    getNames(value) {
-        // 如果值是 undefined 或空字符串，则默认为 " "，假设后端将其解释为“获取所有”或通配符
-        const patName = (value === undefined || value === "") ? " " : value;
-            
-        // 注意：原始代码使用 email 作为查询参数名，但用户输入的是 name，这里假设后端处理逻辑保持不变
-        // 如果后端确实希望接收 name 参数，这里应该使用 name 而不是 email
-        fetch('http://localhost:3001/MedHistView?name=' + encodeURIComponent(patName) + '&variable=words')
-        .then(res => {
-            if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-            }
-            return res.json();
-        })
-        .then(res => this.setState({ medhiststate: res.data }))
-        .catch(error => console.error("Error fetching medical history:", error));
-    }
+  getNames(value) {
+    this.setState({ loading: true });
+    const patName = (value === undefined || value === "") ? " " : value;
+    fetch('http://localhost:3001/MedHistView?name=' + encodeURIComponent(patName) + '&variable=words')
+      .then(res => res.json())
+      .then(res => this.setState({ medhiststate: res.data || [], loading: false }))
+      .catch(error => {
+        console.error("Error:", error);
+        this.setState({ loading: false });
+      });
+  }
 
-    render() {
-        const { medhiststate } = this.state;
+  render() {
+    const { medhiststate, loading } = this.state;
 
-        // 头部组件 (AppBar)
-        const Header = () => (
-            <Box
-                tag='header'
-                background='brand'
-                pad='small'
-                elevation='small'
-                justify='between'
-                direction='row'
-                align='center'
+    return (
+      <Grommet full theme={theme}>
+        <Box fill background="background" overflow="auto">
+          
+          {/* --- 頂部頁首：增加返回按鈕 --- */}
+          <Box
+            background="black"
+            pad={{ horizontal: 'xlarge', vertical: 'medium' }}
+            direction="row"
+            align="center"
+            justify="between"
+            flex={false} 
+          >
+            <Box direction="row" align="center" gap="medium">
+              {/* 返回按鈕：直角反色設計 */}
+              <Button 
+                icon={<FormPreviousLink color="white" />}
+                label={<Text color="white" weight="bold" size="small">返回主頁 / BACK</Text>}
+                href="/DocHome"
+                plain
+                style={{
+                  border: '1px solid white',
+                  padding: '5px 15px'
+                }}
+              />
+              <Box direction="column">
+                <Heading level={2} margin="none" color="white" style={{ letterSpacing: '2px', fontWeight: '800' }}>
+                  PATIENT DIRECTORY
+                </Heading>
+                <Text color="white" size="small">醫院管理系統 / ADMINISTRATION SYSTEM</Text>
+              </Box>
+            </Box>
+            <Box>
+                <Text color="white" weight="bold">DOCTOR PORTAL / 醫生入口</Text>
+            </Box>
+          </Box>
+
+          <Main pad={{ vertical: 'large', horizontal: 'xlarge' }} align="center" flex={false}>
+            <Box width="100%" style={{ maxWidth: '1600px' }} direction="column">
+              
+              {/* --- 優化後的搜尋欄 --- */}
+              <Box 
+                direction="row" 
+                align="center" 
+                border={{ side: 'all', color: 'black', size: '2px' }} 
+                margin={{ bottom: 'xlarge' }}
+                background="white"
                 flex={false}
-            >
-               <a style={{ color: 'inherit', textDecoration: 'inherit'}} href="/"><Heading level='3' margin='none' color="white">医院管理系统</Heading></a>
-
-            </Box>
-        );
-
-        // 主体内容组件（包含搜索结果表格）
-        const Body = () => (
-            <Box width="large" pad="none" align="center" background="white" elevation="small" round="small">
-                {/* 表格容器 */}
-                <Box overflow="auto" width="100%">
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead style={{ backgroundColor: '#f5f5f5' }}>
-                            <tr>
-                                <th style={tableHeaderStyle}>姓名</th>
-                                <th style={tableHeaderStyle}>档案</th>
-                            </tr>
-                        </thead> 
-                        <tbody>
-                            {medhiststate.map(patient =>
-                                // 使用 patient.email 作为 key，假设它是唯一的。如果不是，可能需要更健壮的 key 生成方式。
-                                <tr key={patient.email || `patient-${patient.Name}-${Math.random()}`} style={{ borderBottom: '1px solid #eee' }}>
-                                    <td style={tableCellStyle}>{patient.Name} </td>
-                                    <td style={tableCellStyle}>
-                                        <Button 
-                                            label="查看病历档案" 
-                                            href={'/ViewOneHistory/' + patient.email}
-                                            primary
-                                            size="small"
-                                        />
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </Box>
-                {medhiststate.length === 0 && (
-                     <Box pad="medium" align="center"> {/* 居中显示未找到信息文本 */}
-                         <Text>未找到患者信息。</Text>
-                     </Box>
-                )}
-            </Box>
-        );
-        
-        // 样式定义
-        const tableHeaderStyle = { padding: '12px', textAlign: 'left', fontWeight: 'bold' };
-        const tableCellStyle = { padding: '12px', textAlign: 'left', borderBottom: '1px solid #eee' };
-
-
-        return (
-            <Grommet full={true} theme={theme}>
-                <Header />
-                <Box fill={true} align="center" background="light-1" pad="medium">
-                    {/* 搜索表单 */}
-                    <Box // 这个 Box 是搜索表单的白色卡片容器
-                        background="white"
-                        pad="large" // 增加内部填充，为内容提供更多空间
-                        elevation="small"
-                        round="small"
-                        margin={{ bottom: 'medium' }} // 与下方列表保持距离
-                        width="medium" // 固定搜索卡片的宽度，使其更具视觉焦点
-                    >
-                        <Form
-                            onSubmit={({ value }) => {
-                                // 搜索字段名为 searchName
-                                this.getNames(value.searchName);
-                            }}>
-                            <Heading level="4" margin={{ top: "none", bottom: "medium" }} textAlign="center">按姓名搜索患者</Heading> {/* 增加标题下方的外边距 */}
-                            <FormField name="searchName" htmlFor="search-name-input" margin={{ bottom: 'small' }}> {/* 增加输入框下方的外边距 */}
-                                <TextInput
-                                    id="search-name-input"
-                                    name="searchName"
-                                    placeholder="输入患者姓名"
-                                    required
-                                />
-                            </FormField>
-                            <Box align="center" margin={{ top: 'small' }}> {/* 增加按钮上方的外边距并居中 */}
-                                <Button type="submit" primary label="搜索" />
-                            </Box>
-                        </Form>
+              >
+                <Form 
+                  onSubmit={({ value }) => this.getNames(value.searchName)} 
+                  style={{ width: '100%' }}
+                >
+                  <Box direction="row" align="center">
+                    <Box pad={{ horizontal: 'medium' }} border={{ side: 'right', color: 'black', size: '1px' }}>
+                      <Search color="black" size="medium" />
                     </Box>
-                    
-                    {/* 患者列表 */}
-                    <Body />
+                    <Box flex pad={{ horizontal: 'medium' }}>
+                      <TextInput
+                        name="searchName"
+                        placeholder="ENTER PATIENT NAME TO FILTER... / 輸入患者姓名檢索"
+                        plain 
+                        style={{ 
+                          fontSize: '18px', 
+                          fontWeight: 'bold', 
+                          letterSpacing: '1px'
+                        }}
+                      />
+                    </Box>
+                    <Button 
+                      type="submit" 
+                      fill="vertical" 
+                      primary 
+                      label={
+                        <Box pad={{ horizontal: 'xlarge', vertical: 'medium' }}>
+                          <Text weight="bold" size="medium">RUN QUERY / 執行檢索</Text>
+                        </Box>
+                      }
+                      style={{ border: 'none', padding: '0px' }}
+                    />
+                  </Box>
+                </Form>
+              </Box>
+
+              {/* --- 結果列表 --- */}
+              <Box direction="column" flex={false}>
+                <Box direction="row" justify="between" align="end" border="bottom" pad={{ bottom: 'small' }} margin={{ bottom: 'medium' }}>
+                  <Heading level={3} margin="none">
+                    SEARCH RESULTS / 搜尋結果
+                  </Heading>
+                  <Text size="small" weight="bold">TOTAL RECORDS: {medhiststate.length}</Text>
                 </Box>
-            </Grommet>
-        );
-    }
+
+                {medhiststate.length === 0 ? (
+                  <Box pad="xlarge" align="center" border={{ style: 'dashed', color: 'light-4' }} flex={false} margin={{ top: 'medium' }}>
+                    <Text color="dark-4">{loading ? "正在讀取數據庫..." : "未找到匹配患者記錄"}</Text>
+                  </Box>
+                ) : (
+                  medhiststate.map((patient, index) => (
+                    <Box 
+                      key={patient.email || index} 
+                      direction="row"
+                      justify="between"
+                      align="center"
+                      pad={{ vertical: 'medium', horizontal: 'small' }}
+                      border={{ side: 'bottom', color: 'black', size: 'xsmall' }}
+                      flex={false}
+                      hoverIndicator={{ color: 'light-1' }}
+                    >
+                      <Box direction="row" gap="xlarge" flex>
+                        <Box width="25%">
+                           <InfoItem label="姓名 / NAME" value={patient.Name} />
+                        </Box>
+                        <Box width="35%">
+                           <InfoItem label="電子郵件 / EMAIL" value={patient.email} />
+                        </Box>
+                        <Box width="20%">
+                           <InfoItem label="系統編號 / ID" value={`PAT-${(index + 1000).toString()}`} />
+                        </Box>
+                        <Box width="20%">
+                           <InfoItem label="檔案狀態 / STATUS" value="ACTIVE / 已建檔" />
+                        </Box>
+                      </Box>
+                      
+                      <Box flex={false} margin={{ left: 'medium' }}>
+                        <Button 
+                          href={'/ViewOneHistory/' + patient.email}
+                          label="查看詳細檔案 / VIEW DOSSIER"
+                          icon={<View size="small"/>}
+                          primary
+                          style={{
+                            padding: '10px 20px',
+                            fontWeight: 'bold',
+                            fontSize: '12px'
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  ))
+                )}
+              </Box>
+
+              {/* --- 頁尾 --- */}
+              <Box margin={{ top: 'xlarge' }} align="between" direction="row" border={{ side: 'top', color: 'black' }} pad={{ vertical: 'medium' }} flex={false}>
+                <Text size="xsmall" color="dark-4">DATA SOURCE: INTERNAL MEDICAL DATABASE / 內部醫療數據庫</Text>
+                <Text size="xsmall" color="dark-4">GENERATED ON / 生成時間: {new Date().toLocaleString()}</Text>
+              </Box>
+
+            </Box>
+          </Main>
+        </Box>
+      </Grommet>
+    );
+  }
 }
 
 export default ViewMedHist;

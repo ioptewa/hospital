@@ -10,30 +10,46 @@ import {
     TableBody,
     TableRow,
     TableCell,
-    Card,
-    CardBody
+    Main
 } from 'grommet';
-import { FormPreviousLink, FormSchedule, Validate } from 'grommet-icons'; // 移除了 Trash 图标，因为不再使用
-
-import './App.css';
+import { FormPreviousLink, FormSchedule, Validate } from 'grommet-icons';
 
 const theme = {
     global: {
         colors: {
             brand: '#000000',
-            focus: '#000000',
-            "status-ok": "#10B981",    // 绿色
-            "status-warning": "#FFB020", // 橙色
-            "status-error": "#FF4040",   // 红色
-            "light-1": "#F8F9FA",
+            background: '#ffffff',
+            border: '#000000',
+            focus: 'transparent',
+            "status-ok": "#10B981",    
+            "status-warning": "#FFB020", 
+            text: { light: '#000000' },
         },
         font: {
-            family: 'Lato',
+            family: 'sans-serif',
+            size: '16px', // 提升全局基礎字號
         },
+    },
+    button: {
+        border: { radius: "0px" },
+        primary: {
+            color: "#ffffff",
+            background: "#000000"
+        }
     },
     table: {
         header: {
-            extend: `font-weight: bold; color: #444;`
+            background: { color: "black" },
+            extend: `
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: white;
+                font-weight: 900;
+            `
+        },
+        body: {
+            align: "center",
+            pad: { horizontal: "medium", vertical: "medium" }
         }
     }
 };
@@ -46,11 +62,9 @@ export class DocViewAppt extends Component {
     }
 
     getNames() {
-        // 这里的 fetch 保持你原有的逻辑
-        // 如果后端支持，建议把 http://localhost:3001 写在配置文件里
-        fetch('http://localhost:3001/doctorViewAppt?email=' + this.props.email) // 注意：如果你需要传参确保这里正确
+        fetch('http://localhost:3001/doctorViewAppt?email=' + this.props.email)
             .then(res => res.json())
-            .then(res => this.setState({ apptlist: res.data, loading: false }))
+            .then(res => this.setState({ apptlist: res.data || [], loading: false }))
             .catch(error => {
                 console.error("Error fetching appointments:", error);
                 this.setState({ loading: false });
@@ -60,134 +74,133 @@ export class DocViewAppt extends Component {
     render() {
         const { apptlist, loading } = this.state;
 
-        // 辅助函数：渲染状态徽章
         const StatusBadge = ({ status }) => {
             const isDone = status !== "NotDone";
             return (
                 <Box
                     background={isDone ? "status-ok" : "status-warning"}
                     pad={{ horizontal: 'small', vertical: 'xsmall' }}
-                    round="small"
                     align="center"
-                    width={{ min: "80px" }}
+                    justify="center"
+                    border={{ color: 'black', size: '1px' }}
+                    width={{ min: "110px" }}
                 >
                     <Text size="small" color="white" weight="bold">
-                        {isDone ? "已完成" : "待处理"}
+                        {isDone ? "已完成" : "待處理"}
                     </Text>
                 </Box>
             );
         };
 
-        const Header = () => (
-            <Box
-                tag='header'
-                background='brand'
-                pad={{ vertical: 'small', horizontal: 'medium' }}
-                elevation='medium'
-                justify='between'
-                direction='row'
-                align='center'
-                flex={false}
-            >
-                <Box direction="row" align="center" gap="small">
-                    <Button 
-                        icon={<FormPreviousLink color="white" />} 
-                        href="/DocHome" // 假设你有一个医生主页，如果没有可以改回 "/"
-                        hoverIndicator 
-                    />
-                    <Heading level='3' margin='none' color="white">医院管理系统</Heading>
-                </Box>
-            </Box>
-        );
-
-        const Body = () => (
-            <Box align="center" pad="medium" width="100%">
-                <Heading level="2" margin={{ top: 'none', bottom: 'medium' }}>我的预约列表</Heading>
-
-                {/* 使用 Card 包裹表格，增加卡片质感 */}
-                <Card background="white" elevation="small" round="small" width="large" style={{ maxWidth: '1400px', width: '100%' }}>
-                    <CardBody pad="none">
-                        
-                        {/* --- 核心修改：滚动容器 --- */}
-                        {/* Box overflow="auto" 允许内容超出时出现滚动条 */}
-                        <Box overflow="auto" height={{ max: "70vh" }}> 
-                            
-                            {apptlist.length > 0 ? (
-                                <Table stickyHeader>
-                                    <TableHeader background="light-2">
-                                        <TableRow>
-                                            {/* whiteSpace: 'nowrap' 防止表头换行 */}
-                                            <TableCell scope="col" border="bottom" style={{ whiteSpace: 'nowrap' }}><strong>编号</strong></TableCell>
-                                            <TableCell scope="col" border="bottom" style={{ whiteSpace: 'nowrap' }}><strong>患者姓名</strong></TableCell>
-                                            <TableCell scope="col" border="bottom" style={{ whiteSpace: 'nowrap' }}><strong>日期</strong></TableCell>
-                                            <TableCell scope="col" border="bottom" style={{ whiteSpace: 'nowrap' }}><strong>时间</strong></TableCell>
-                                            {/* 主诉和症状允许换行，但设置最小宽度以免太窄 */}
-                                            <TableCell scope="col" border="bottom" style={{ minWidth: '150px' }}><strong>主诉</strong></TableCell>
-                                            <TableCell scope="col" border="bottom" style={{ minWidth: '150px' }}><strong>症状</strong></TableCell>
-                                            <TableCell scope="col" border="bottom" style={{ whiteSpace: 'nowrap' }}><strong>状态</strong></TableCell>
-                                            <TableCell scope="col" border="bottom" style={{ whiteSpace: 'nowrap' }}><strong>诊断</strong></TableCell>
-                                            {/* 已删除：管理列的表头 */}
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {apptlist.map(appt => (
-                                            <TableRow key={appt.id}>
-                                                <TableCell>
-                                                    <Text weight="bold">{appt.id}</Text>
-                                                </TableCell>
-                                                <TableCell>{appt.name}</TableCell>
-                                                <TableCell style={{ whiteSpace: 'nowrap' }}>
-                                                    {new Date(appt.date).toLocaleDateString()}
-                                                </TableCell>
-                                                <TableCell>{appt.starttime}</TableCell>
-                                                <TableCell>
-                                                    <Text size="small" color="dark-2">{appt.concerns}</Text>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Text size="small" color="dark-2">{appt.symptoms}</Text>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <StatusBadge status={appt.status} />
-                                                </TableCell>
-                                                <TableCell>
-                                                    {/* 诊断按钮 */}
-                                                    <Button
-                                                        label="去诊断"
-                                                        icon={<Validate size="small" />}
-                                                        href={`/Diagnose/${appt.id}`}
-                                                        primary
-                                                        size="small"
-                                                        color="brand"
-                                                        style={{ whiteSpace: 'nowrap' }}
-                                                    />
-                                                </TableCell>
-                                                {/* 已删除：管理列的内容（取消按钮/不可操作文本） */}
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            ) : (
-                                <Box pad="large" align="center" justify="center" gap="small">
-                                    {!loading && (
-                                        <>
-                                            <FormSchedule size="large" color="neutral-gray" />
-                                            <Text size="medium" color="dark-4">暂无预约记录</Text>
-                                        </>
-                                    )}
-                                    {loading && <Text>加载中...</Text>}
-                                </Box>
-                            )}
-                        </Box>
-                    </CardBody>
-                </Card>
-            </Box>
-        );
-
         return (
-            <Grommet full={true} theme={theme}>
-                <Box fill={true} background="light-1">
-                    <Header />
-                    <Body />
+            <Grommet full theme={theme}>
+                <Box fill background="background" overflow="auto">
+                    
+                    {/* --- 頂部頁首 --- */}
+                    <Box
+                        background="black"
+                        pad={{ horizontal: 'xlarge', vertical: 'medium' }}
+                        direction="row"
+                        align="center"
+                        justify="between"
+                        flex={false}
+                    >
+                        <Box direction="row" align="center" gap="medium">
+                            <Button 
+                                icon={<FormPreviousLink color="white" />} 
+                                label={<Text color="white" weight="bold">返回主頁 / BACK</Text>}
+                                href="/DocHome" 
+                                plain
+                                style={{ border: '2px solid white', padding: '8px 20px' }}
+                            />
+                            <Box>
+                                <Heading level={2} margin="none" color="white" style={{ letterSpacing: '2px' }}>
+                                    APPOINTMENT LOG
+                                </Heading>
+                                <Text color="white" size="small">醫院預約管理系統 / ADMINISTRATION</Text>
+                            </Box>
+                        </Box>
+                        <Box border={{ color: 'white', size: 'small' }} pad="xsmall">
+                            <Text color="white" weight="bold" size="xsmall">ACCESS LEVEL: MEDICAL / 醫療權限</Text>
+                        </Box>
+                    </Box>
+
+                    <Main pad={{ vertical: 'large', horizontal: 'xlarge' }} align="center">
+                        <Box width="100%" style={{ maxWidth: '1600px' }}>
+                            
+                            <Box direction="row" justify="between" align="end" border={{ side: 'bottom', color: 'black', size: '3px' }} pad={{ bottom: 'small' }} margin={{ bottom: 'medium' }}>
+                                <Heading level={3} margin="none" style={{ fontWeight: '800' }}>
+                                    MY APPOINTMENTS / 我的預約清單
+                                </Heading>
+                                <Text weight="bold" size="large">記錄總數: {apptlist.length}</Text>
+                            </Box>
+
+                            {/* 表格主體：增加外邊框 */}
+                            <Box border={{ color: 'black', size: '2px' }}>
+                                <Box overflow="auto" height={{ max: "75vh" }}>
+                                    {apptlist.length > 0 ? (
+                                        <Table stickyHeader>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    {/* 顯式增加 Cell 邊框線 */}
+                                                    <TableCell border={{ side: 'all', color: 'black' }}><Text weight="bold" size="small">編號 / ID</Text></TableCell>
+                                                    <TableCell border={{ side: 'all', color: 'black' }}><Text weight="bold" size="small">患者姓名 / NAME</Text></TableCell>
+                                                    <TableCell border={{ side: 'all', color: 'black' }}><Text weight="bold" size="small">預約日期 / DATE</Text></TableCell>
+                                                    <TableCell border={{ side: 'all', color: 'black' }}><Text weight="bold" size="small">時段 / TIME</Text></TableCell>
+                                                    <TableCell border={{ side: 'all', color: 'black' }} style={{ width: '35%' }}><Text weight="bold" size="small">主訴與症狀詳細 / CLINICAL DETAILS</Text></TableCell>
+                                                    <TableCell border={{ side: 'all', color: 'black' }} align="center"><Text weight="bold" size="small">狀態 / STATUS</Text></TableCell>
+                                                    <TableCell border={{ side: 'all', color: 'black' }} align="center"><Text weight="bold" size="small">操作 / ACTION</Text></TableCell>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {apptlist.map((appt, index) => (
+                                                    <TableRow key={appt.id}>
+                                                        <TableCell border={{ side: 'all', color: 'black' }}><Text weight="bold">{appt.id}</Text></TableCell>
+                                                        <TableCell border={{ side: 'all', color: 'black' }}><Text weight="bold" size="medium">{appt.name}</Text></TableCell>
+                                                        <TableCell border={{ side: 'all', color: 'black' }}><Text size="medium">{new Date(appt.date).toLocaleDateString()}</Text></TableCell>
+                                                        <TableCell border={{ side: 'all', color: 'black' }}><Text size="medium" weight="bold">{appt.starttime}</Text></TableCell>
+                                                        
+                                                        {/* 加大的主訴區域 */}
+                                                        <TableCell border={{ side: 'all', color: 'black' }} pad="medium">
+                                                            <Box>
+                                                                <Text size="medium" weight="bold" margin={{ bottom: 'xsmall' }}>主訴：{appt.concerns}</Text>
+                                                                <Text size="small" color="dark-2">症狀描述：{appt.symptoms}</Text>
+                                                            </Box>
+                                                        </TableCell>
+
+                                                        <TableCell border={{ side: 'all', color: 'black' }} align="center">
+                                                            <StatusBadge status={appt.status} />
+                                                        </TableCell>
+                                                        <TableCell border={{ side: 'all', color: 'black' }} align="center">
+                                                            <Button
+                                                                label={<Text weight="bold" size="small">執行診斷 / DIAGNOSE</Text>}
+                                                                icon={<Validate size="small" />}
+                                                                href={`/Diagnose/${appt.id}`}
+                                                                primary
+                                                                style={{ padding: '10px 20px' }}
+                                                            />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    ) : (
+                                        <Box pad="xlarge" align="center">
+                                            {loading ? <Text size="large">數據讀取中...</Text> : (
+                                                <Text size="large" weight="bold">目前無任何預約記錄</Text>
+                                            )}
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Box>
+
+                            {/* 頁尾 */}
+                            <Box margin={{ top: 'medium' }} direction="row" justify="between">
+                                <Text size="xsmall" color="dark-4" weight="bold">DATA SECURED: AES-256</Text>
+                                <Text size="xsmall" color="dark-4" weight="bold">LOG DATE: {new Date().toLocaleString()}</Text>
+                            </Box>
+                        </Box>
+                    </Main>
                 </Box>
             </Grommet>
         );

@@ -7,122 +7,169 @@ import {
   FormField,
   Form,
   Grid,
-  Card,
-  CardBody,
-  CardHeader,
   Text,
+  TextInput,
+  Main
 } from 'grommet';
-import './App.css';
+import { FormPreviousLink, ShieldSecurity, MailOption } from 'grommet-icons';
 
+// 統一硬核黑白主題配置
 const theme = {
   global: {
     colors: {
-      brand: '#2B2B2B',
-      focus: '#000000',
-      background: '#F8F9FA',
+      brand: '#000000',
+      background: '#ffffff',
+      border: '#000000',
+      focus: 'transparent',
+      "status-ok": "#10B981",
+      "status-error": "#FF4040",
+      text: { light: '#000000' },
     },
     font: {
-      family: 'Lato',
+      family: 'sans-serif',
+      size: '16px',
     },
   },
+  button: {
+    border: { radius: '0px' },
+    primary: {
+      color: "#ffffff",
+      background: "#000000"
+    }
+  },
+  formField: {
+    border: { side: 'all', color: 'black', size: '1px' },
+    label: { weight: 700, margin: { bottom: 'xsmall', left: 'none' }, size: 'small' },
+    round: '0px',
+  }
 };
 
-const AppBar = (props) => (
-  <Box
-    tag='header'
-    direction='row'
-    align='center'
-    justify='between'
-    background='brand'
-    pad={{ left: 'medium', right: 'small', vertical: 'small' }}
-    style={{ zIndex: '1' }}
-    {...props}
-  />
-);
-
 export class Settings extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      passwordMessage: '',
+      emailMessage: '',
+    };
+  }
+
+  showMessage(type, message) {
+    if (type === 'password') {
+      this.setState({ passwordMessage: message });
+      setTimeout(() => this.setState({ passwordMessage: '' }), 3000);
+    } else if (type === 'email') {
+      this.setState({ emailMessage: message });
+      setTimeout(() => this.setState({ emailMessage: '' }), 3000);
+    }
+  }
+
   render() {
+    const { passwordMessage, emailMessage } = this.state;
+
     return (
       <Grommet theme={theme} full>
-        <Box fill>
-          {/* 顶栏 */}
-          <AppBar>
-            <a
-              style={{ color: 'white', textDecoration: 'none' }}
-              href='/'
-            >
-              <Heading level='3' margin='none' color='white'>
-                医院管理系统
-              </Heading>
-            </a>
-          </AppBar>
+        <Box fill background="background" overflow="auto">
+          
+          {/* --- 頂部頁首 (同步 DocHome 風格) --- */}
+          <Box
+            background="black"
+            pad={{ horizontal: 'xlarge', vertical: 'medium' }}
+            direction="row"
+            align="center"
+            justify="between"
+            flex={false}
+          >
+            <Box direction="row" align="center" gap="medium">
+              <Button 
+                icon={<FormPreviousLink color="white" />} 
+                label={<Text color="white" weight="bold">返回主頁 / BACK</Text>}
+                href="/" // 根據需要調整返回路徑
+                plain
+                style={{ border: '2px solid white', padding: '8px 20px' }}
+              />
+              <Box>
+                <Heading level={2} margin="none" color="white" style={{ letterSpacing: '2px', fontWeight: '800' }}>
+                  SYSTEM SETTINGS
+                </Heading>
+                <Text color="white" size="small">用戶帳戶管理 / USER ADMINISTRATION</Text>
+              </Box>
+            </Box>
+          </Box>
 
-          {/* 主体区域 */}
-          <Box pad='large' align='center'>
-            <Heading level='2' margin='small'>
-              设置 (Settings)
-            </Heading>
+          <Main pad={{ vertical: 'large', horizontal: 'xlarge' }} align="center">
+            <Box width="100%" style={{ maxWidth: '1200px' }}>
+              
+              {/* 標題裝飾線 */}
+              <Box direction="row" justify="between" align="end" border={{ side: 'bottom', color: 'black', size: '3px' }} pad={{ bottom: 'small' }} margin={{ bottom: 'xlarge' }}>
+                <Heading level={3} margin="none" style={{ fontWeight: '800' }}>
+                  PREFERENCES / 系統設置
+                </Heading>
+              </Box>
 
-            <Grid
-              columns={['medium', 'medium']}
-              gap='large'
-              pad='medium'
-              responsive
-            >
-              {/* 修改密码卡片 */}
-              <Card elevation='medium' background='white' pad='medium' round='medium'>
-                <CardHeader pad={{ bottom: 'small' }}>
-                  <Text size='large' weight='bold'> 修改密码 </Text>
-                </CardHeader>
-                <CardBody>
+              <Grid
+                columns={{ count: 'fit', size: 'medium' }}
+                gap='xlarge'
+                responsive
+              >
+                {/* --- 修改密碼區塊 --- */}
+                <Box border={{ color: 'black', size: '2px' }} pad='large' background="white">
+                  <Box direction="row" align="center" gap="small" margin={{ bottom: 'medium' }}>
+                    <ShieldSecurity size="medium" color="black" />
+                    <Heading level='4' margin='none'>PASSWORD / 密碼</Heading>
+                  </Box>
+                  
                   <Form
                     onSubmit={({ value }) => {
-                      let email_in_use = '';
                       fetch('http://localhost:3001/userInSession')
                         .then(res => res.json())
                         .then(res => {
-                          email_in_use = res.email;
+                          const email_in_use = res.email;
                           fetch(
                             `http://localhost:3001/resetPasswordPatient?email=${email_in_use}&oldPassword=${value.oldPassword}&newPassword=${value.newPassword}`,
                             { method: 'POST' }
                           )
                             .then(res => res.json())
                             .then(res => {
-                              let didUpdate = res.data.affectedRows;
-                              if (didUpdate === 0) {
-                                window.alert('旧密码错误。');
+                              if (res.data.affectedRows === 0) {
+                                this.showMessage('password', '舊密碼不正確。');
                               } else {
-                                window.alert('密码修改成功！');
+                                this.showMessage('password', '密碼修改成功！');
                               }
                             });
                         });
                     }}
                   >
-                    <FormField
-                      label='旧密码'
-                      name='oldPassword'
-                      type='password'
-                      required
-                    />
-                    <FormField
-                      label='新密码'
-                      name='newPassword'
-                      type='password'
-                      required
-                    />
-                    <Box align='center' pad={{ top: 'medium' }}>
-                      <Button type='submit' label='确认修改' primary />
-                    </Box>
-                  </Form>
-                </CardBody>
-              </Card>
+                    <FormField label='OLD PASSWORD / 舊密碼' name='oldPassword' required>
+                      <TextInput name='oldPassword' type='password' plain style={{ fontWeight: 'bold' }} />
+                    </FormField>
+                    <FormField label='NEW PASSWORD / 新密碼' name='newPassword' required>
+                      <TextInput name='newPassword' type='password' plain style={{ fontWeight: 'bold' }} />
+                    </FormField>
 
-              {/* 修改邮箱卡片 */}
-              <Card elevation='medium' background='white' pad='medium' round='medium'>
-                <CardHeader pad={{ bottom: 'small' }}>
-                  <Text size='large' weight='bold'> 修改电子邮箱 </Text>
-                </CardHeader>
-                <CardBody>
+                    {passwordMessage && (
+                      <Box background={passwordMessage.includes('成功') ? 'status-ok' : 'status-error'} pad="xsmall" margin={{ vertical: 'small' }}>
+                        <Text size="small" color="white" weight="bold" textAlign="center">{passwordMessage}</Text>
+                      </Box>
+                    )}
+
+                    <Button 
+                      type='submit' 
+                      label={<Text weight="bold">UPDATE PASSWORD</Text>} 
+                      primary 
+                      fill="horizontal"
+                      margin={{ top: 'medium' }}
+                      style={{ padding: '12px' }}
+                    />
+                  </Form>
+                </Box>
+
+                {/* --- 修改郵箱區塊 --- */}
+                <Box border={{ color: 'black', size: '2px' }} pad='large' background="white">
+                  <Box direction="row" align="center" gap="small" margin={{ bottom: 'medium' }}>
+                    <MailOption size="medium" color="black" />
+                    <Heading level='4' margin='none'>EMAIL / 郵箱</Heading>
+                  </Box>
+                  
                   <Form
                     onSubmit={({ value }) => {
                       fetch('http://localhost:3001/userInSession')
@@ -130,44 +177,55 @@ export class Settings extends Component {
                         .then(res => {
                           const oldEmail = res.email;
                           const who = res.who;
-                          const url =
-                            who === 'pat'
-                              ? `http://localhost:3001/resetEmailPatient?oldEmail=${oldEmail}&newEmail=${value.newEmail}&password=${value.password}`
-                              : `http://localhost:3001/resetEmailDoctor?oldEmail=${oldEmail}&newEmail=${value.newEmail}&password=${value.password}`;
+                          const url = who === 'pat'
+                            ? `http://localhost:3001/resetEmailPatient?oldEmail=${oldEmail}&newEmail=${value.newEmail}&password=${value.password}`
+                            : `http://localhost:3001/resetEmailDoctor?oldEmail=${oldEmail}&newEmail=${value.newEmail}&password=${value.password}`;
 
                           fetch(url, { method: 'POST' })
                             .then(res => res.json())
                             .then(res => {
-                              let didUpdate = res.data.affectedRows;
-                              if (didUpdate === 0) {
-                                window.alert('密码错误或该邮箱已被占用。');
+                              if (res.data.affectedRows === 0) {
+                                this.showMessage('email', '密碼錯誤或郵箱已被佔用。');
                               } else {
-                                window.alert('邮箱修改成功！');
+                                this.showMessage('email', '郵箱修改成功！');
                               }
                             });
                         });
                     }}
                   >
-                    <FormField
-                      label='验证密码'
-                      name='password'
-                      type='password'
-                      required
+                    <FormField label='VERIFY PASSWORD / 驗證密碼' name='password' required>
+                      <TextInput name='password' type='password' plain style={{ fontWeight: 'bold' }} />
+                    </FormField>
+                    <FormField label='NEW EMAIL / 新電子郵箱' name='newEmail' required>
+                      <TextInput name='newEmail' type='email' plain style={{ fontWeight: 'bold' }} />
+                    </FormField>
+
+                    {emailMessage && (
+                      <Box background={emailMessage.includes('成功') ? 'status-ok' : 'status-error'} pad="xsmall" margin={{ vertical: 'small' }}>
+                        <Text size="small" color="white" weight="bold" textAlign="center">{emailMessage}</Text>
+                      </Box>
+                    )}
+
+                    <Button 
+                      type='submit' 
+                      label={<Text weight="bold">UPDATE EMAIL</Text>} 
+                      primary 
+                      fill="horizontal"
+                      margin={{ top: 'medium' }}
+                      style={{ padding: '12px' }}
                     />
-                    <FormField
-                      label='新电子邮箱'
-                      name='newEmail'
-                      type='email'
-                      required
-                    />
-                    <Box align='center' pad={{ top: 'medium' }}>
-                      <Button type='submit' label='确认修改' primary />
-                    </Box>
                   </Form>
-                </CardBody>
-              </Card>
-            </Grid>
-          </Box>
+                </Box>
+              </Grid>
+
+              {/* 頁尾裝飾 */}
+              <Box margin={{ top: 'xlarge' }} direction="row" justify="between" border={{ side: 'top', color: 'black' }} pad={{ vertical: 'medium' }}>
+                <Text size="xsmall" color="dark-4" weight="bold">DATA INTEGRITY ENFORCED</Text>
+                <Text size="xsmall" color="dark-4" weight="bold">ACCESS LOGGED: {new Date().toLocaleString()}</Text>
+              </Box>
+
+            </Box>
+          </Main>
         </Box>
       </Grommet>
     );

@@ -14,10 +14,13 @@ import {
     Calendar,
     User,
     SettingsOption,
-    Logout
+    Logout,
+    Home,
+    DocumentText,
+    BarChart
 } from 'grommet-icons';
 
-// 头像图片
+// 頭像圖片
 import maleIcon from './male.png';
 import femaleIcon from './female.png';
 
@@ -27,13 +30,29 @@ const theme = {
     global: {
         colors: {
             brand: '#000000',
+            control: '#000000',
             focus: '#000000',
-            "neutral-gray": "#cccccc"
+            "neutral-gray": "#cccccc",
+            background: {
+                light: '#ffffff',
+            },
+            text: {
+                dark: '#ffffff',
+                light: '#000000',
+            }
         },
         font: {
-            family: 'Lato',
+            family: '"Lato", "Helvetica Neue", "Microsoft JhengHei", sans-serif',
         },
     },
+    button: {
+        border: {
+            radius: '4px',
+        },
+        primary: {
+            color: '#000000',
+        }
+    }
 };
 
 const AppBar = (props) => (
@@ -44,15 +63,20 @@ const AppBar = (props) => (
         justify='between'
         background='brand'
         pad={{ left: 'medium', right: 'small', vertical: 'small' }}
-        style={{ zIndex: '1' }}
+        style={{ zIndex: '10' }}
         {...props} />
 );
 
 const MenuButton = ({ label, icon, href, onClick }) => (
-    <Button hoverIndicator={{ color: "#333333" }} plain href={href} onClick={onClick}>
-        <Box direction="row" pad="medium" gap="small" align="center">
-            {React.cloneElement(icon, { color: "white" })}
-            <Text color="white">{label}</Text>
+    <Button 
+        hoverIndicator={{ color: "#333333" }} 
+        plain 
+        href={href} 
+        onClick={onClick}
+    >
+        <Box direction="row" pad="medium" gap="medium" align="center">
+            {React.cloneElement(icon, { color: "white", size: "medium" })}
+            <Text color="white" weight={400} size="medium">{label}</Text>
         </Box>
     </Button>
 );
@@ -61,8 +85,8 @@ export class DocHome extends Component {
 
     state = {
         doctorInfo: {
-            name: "加载中...",
-            email: "加载中...",
+            name: "載入中...",
+            email: "載入中...",
             gender: "",
             age: "",
             address: ""
@@ -74,7 +98,7 @@ export class DocHome extends Component {
         fetch("http://localhost:3001/userInSession")
             .then(res => res.json())
             .then(res => {
-                var email_json = JSON.parse(JSON.stringify(res));
+                const email_json = JSON.parse(JSON.stringify(res));
                 let email_in_use = email_json.email;
 
                 fetch('http://localhost:3001/checkIfDocExists?email=' + email_in_use)
@@ -85,7 +109,7 @@ export class DocHome extends Component {
                         } else {
                             this.setState({
                                 doctorInfo: {
-                                    name: "未找到医生",
+                                    name: "未找到資料",
                                     email: email_in_use,
                                     gender: "未知",
                                     age: "未知",
@@ -104,61 +128,89 @@ export class DocHome extends Component {
         let rawGender = (doctorInfo.gender || "").toString();
         const genderStr = rawGender.toLowerCase().trim();
 
-        // 性别显示头像
-        let avatarContent;
-        const imgStyle = {
-            width: '150px',
-            height: '150px',
-            borderRadius: '50%',
-            objectFit: 'cover',
-            marginBottom: '15px'
-        };
+        // 頭像組件：移除外層方框
+        const AvatarDisplay = () => {
+            const isMale = ["male", "man", "boy", "m", "男"].includes(genderStr);
+            const isFemale = ["female", "woman", "girl", "f", "女"].includes(genderStr);
+            
+            const imgStyle = {
+                width: '180px', // 稍微調大一點，視覺更平衡
+                height: '180px',
+                objectFit: 'cover',
+                borderRadius: '50%' // 改成圓形頭像通常在無框設計中更好看，若要方形可刪除此行
+            };
 
-        // ==========================================
-        // 修改重点：这里加入了中文 "男" 和 "女" 的识别
-        // ==========================================
-        if (["male", "man", "boy", "m", "男"].includes(genderStr)) {
-            avatarContent = <img src={maleIcon} alt="Male Avatar" style={imgStyle} />;
-        }
-        else if (["female", "woman", "girl", "f", "女"].includes(genderStr)) {
-            avatarContent = <img src={femaleIcon} alt="Female Avatar" style={imgStyle} />;
-        }
-        else {
-            avatarContent = (
-                <Box width="150px" height="150px" background="light-4" round="full" align="center" justify="center" margin={{ bottom: 'small' }}>
-                    <User size="large" color="white" />
+            if (isMale || isFemale) {
+                return (
+                    <Box margin={{ bottom: 'medium' }}>
+                        <img src={isMale ? maleIcon : femaleIcon} alt="Avatar" style={imgStyle} />
+                    </Box>
+                );
+            }
+            return (
+                <Box 
+                    width="180px" 
+                    height="180px" 
+                    background="light-2" 
+                    round="full" // 改成圓形佔位
+                    align="center" 
+                    justify="center" 
+                    margin={{ bottom: 'medium' }}
+                >
+                    <User size="xlarge" color="dark-4" />
                 </Box>
             );
-        }
+        };
 
         const InfoRow = ({ label, value }) => (
-            <Box direction="row" justify="between" border={{ side: 'bottom', color: 'light-3' }} pad={{ vertical: 'small' }}>
-                <Text weight="bold" color="dark-3">{label}:</Text>
-                <Text color="dark-2">{value}</Text>
+            <Box 
+                direction="row" 
+                align="center"
+                border={{ side: 'bottom', color: 'light-4' }} 
+                pad={{ vertical: 'medium' }}
+            >
+                <Box width="small">
+                    <Text weight={700} color="black" size="medium">{label}</Text>
+                </Box>
+                <Box flex>
+                    <Text color="dark-2" size="medium">{value || "---"}</Text>
+                </Box>
             </Box>
         );
 
         return (
             <Grommet theme={theme} full>
-                <Box fill>
+                <Box fill background="white">
                     <AppBar>
-                        <Button plain onClick={() => this.setState({ showSidebar: !showSidebar })}>
-                            <Heading level='3' margin='none' color="white">医院管理系统</Heading>
-                        </Button>
-                        <Heading level='4' margin='none' color="white">医生仪表板</Heading>
+                        <Box direction="row" align="center" gap="small">
+                            <Button 
+                                icon={<Home color="white" />} 
+                                onClick={() => this.setState({ showSidebar: !showSidebar })} 
+                            />
+                            <Heading level='3' margin='none' color="white" style={{ fontWeight: '800' }}>
+                                醫院管理系統
+                            </Heading>
+                        </Box>
+                        <Heading level='4' margin='none' color="white">醫師工作台</Heading>
                     </AppBar>
 
                     <Box direction='row' flex overflow={{ horizontal: 'hidden' }}>
-                        {/* 侧边栏 */}
+                        {/* 側邊導航 */}
                         <Collapsible direction="horizontal" open={showSidebar}>
-                            <Box flex width='medium' background='brand' elevation='small' align='start' justify='start'>
+                            <Box 
+                                flex 
+                                width='medium' 
+                                background='brand' 
+                                align='start' 
+                                justify='start'
+                            >
                                 <Box fill pad={{ vertical: 'small' }}>
-                                    <MenuButton label="预约" icon={<Calendar />} href="/ApptList" />
-                                    <MenuButton label="查看患者" icon={<User />} href="/MedHistView" />
-                                    <MenuButton label="统计" icon={<Calendar />} href="/DocStatistics" />
-                                    <MenuButton label="设置" icon={<SettingsOption />} href="/DocSettings" />
-                                    <Box border={{ side: 'top', color: 'dark-2' }} margin={{ top: 'small' }}>
-                                        <MenuButton label="退出登录" icon={<Logout />} onClick={() => {
+                                    <MenuButton label="預約排程管理" icon={<Calendar />} href="/ApptList" />
+                                    <MenuButton label="病患資料查詢" icon={<DocumentText />} href="/MedHistView" />
+                                    <MenuButton label="門診數據統計" icon={<BarChart />} href="/DocStatistics" />
+                                    <MenuButton label="個人帳戶設定" icon={<SettingsOption />} href="/DocSettings" />
+                                    <Box border={{ side: 'top', color: 'rgba(255,255,255,0.1)' }} margin={{ top: 'medium' }} pad={{ top: 'small' }}>
+                                        <MenuButton label="登出系統" icon={<Logout />} onClick={() => {
                                             fetch('http://localhost:3001/endSession');
                                             window.location.href = "/";
                                         }} />
@@ -167,33 +219,62 @@ export class DocHome extends Component {
                             </Box>
                         </Collapsible>
 
-                        {/* 主体内容 */}
-                        <Box flex align="center" justify="center" background="light-1" pad="medium">
-                            <Card width="large" background="white" elevation="medium" round="small" pad="medium">
-                                <CardBody direction="row-responsive" gap="medium" pad="medium">
-
-                                    {/* 左侧：头像 + 名字 */}
-                                    <Box width="medium" align="center" justify="start" pad={{ right: "medium" }}>
-                                        {avatarContent}
-                                        <Heading level="2" margin="none" textAlign="center">
+                        {/* 主內容區 */}
+                        <Box flex align="center" justify="center" background="#f4f4f4" pad="large">
+                            <Card 
+                                width="xlarge" 
+                                background="white" 
+                                border={{ color: 'black', size: 'medium' }}
+                                elevation="none"
+                            >
+                                <CardBody 
+                                    direction="row-responsive" 
+                                    gap="xxlarge" 
+                                    pad={{ horizontal: "xlarge", vertical: "xlarge" }}
+                                >
+                                    
+                                    {/* 左側資訊：移除頭像外框 */}
+                                    <Box width="medium" align="center" justify="center">
+                                        <AvatarDisplay />
+                                        <Heading level="1" margin={{ top: 'small', bottom: 'none' }} style={{ fontWeight: '900' }}>
                                             {doctorInfo.name}
                                         </Heading>
-                                        <Text size="small" color="gray" margin={{ top: "xsmall" }}>医生档案</Text>
+                                        <Box background="black" pad={{ horizontal: 'small', vertical: 'xsmall' }} margin={{ top: 'small' }}>
+                                            <Text size="xsmall" color="white" weight="bold">
+                                                專業執業醫師
+                                            </Text>
+                                        </Box>
                                     </Box>
 
-                                    {/* 右侧：详细信息 */}
-                                    <Box flex justify="center" gap="none">
-                                        <InfoRow label="电子邮箱" value={doctorInfo.email || "未知"} />
-                                        <InfoRow label="性别" value={doctorInfo.gender || "未知"} />
-                                        <InfoRow label="年龄" value={doctorInfo.age || "未知"} />
-                                        <InfoRow label="地址" value={doctorInfo.address || "未知"} />
+                                    {/* 右側資訊 */}
+                                    <Box flex justify="center">
+                                        <InfoRow label="電子郵件" value={doctorInfo.email} />
+                                        <InfoRow label="性別" value={doctorInfo.gender} />
+                                        <InfoRow label="醫師年齡" value={doctorInfo.age ? `${doctorInfo.age} 歲` : ""} />
+                                        <InfoRow label="聯絡地址" value={doctorInfo.address} />
                                     </Box>
 
                                 </CardBody>
-                                <CardFooter background="light-2" pad="medium" justify="end">
-                                    <Button label="查看预约" primary href="/ApptList" />
+                                
+                                <CardFooter 
+                                    background="black" 
+                                    pad={{ horizontal: "xlarge", vertical: "medium" }} 
+                                    justify="end"
+                                >
+                                    <Button 
+                                        label={<Text weight="bold" color="white" size="medium">進入預約管理系統</Text>}
+                                        plain
+                                        href="/ApptList"
+                                        hoverIndicator={{ color: "#333" }}
+                                    />
                                 </CardFooter>
                             </Card>
+                            
+                            <Box margin={{ top: 'large' }}>
+                                <Text size="small" color="dark-5" style={{ letterSpacing: '2px' }}>
+                                    © HOSPITAL MANAGEMENT SYSTEM | PROFESSIONAL EDITION
+                                </Text>
+                            </Box>
                         </Box>
                     </Box>
                 </Box>

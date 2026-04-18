@@ -926,6 +926,35 @@ INNER JOIN Doctor D ON B.doctor = D.email;`
   });
 });
 
+
+app.get('/allDrugs', (req, res) => {
+    console.log("--- [DEBUG] 收到前端请求，尝试查询 ---");
+
+    // 增加一个简易的超时保护，防止请求永远挂起
+    const timeout = setTimeout(() => {
+        console.error("❌ 数据库查询超时（10秒未响应）");
+        if (!res.headersSent) res.status(504).json({ error: "数据库响应超时" });
+    }, 10000);
+
+    const sql = "SELECT * FROM medications";
+    
+    con.query(sql, (err, results) => {
+        clearTimeout(timeout); // 得到结果后清除超时定时器
+
+        if (err) {
+            console.error("❌ SQL报错内容:", err);
+            return res.status(500).json({ error: err.message });
+        }
+
+        console.log("✅ 查询成功，数据行数:", results.length);
+        //console.log("数据详情:", results); 
+
+        res.json({ data: results });
+    });
+});
+
+
+
 //To delete appointment
 app.get('/deleteAppt', (req, res) => {
   let a = req.query;
